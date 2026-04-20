@@ -1,6 +1,7 @@
 #include "ScheduleManagerWidget.h"
 #include "ScheduleEdit.h"
 #include "ScheduleModifyWidget.h"
+#include "CategoryModifyWidget.h"
 #include "../models/DatabaseManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -14,9 +15,19 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
+    // 상단 헤더 레이아웃 (날짜 + 카테고리 설정 버튼)
+    QHBoxLayout *headerLayout = new QHBoxLayout();
     m_titleLabel = new QLabel(date.toString("yyyy년 MM월 dd일 일정"), this);
-    m_titleLabel->setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;");
-    mainLayout->addWidget(m_titleLabel);
+    m_titleLabel->setStyleSheet("font-size: 16px; font-weight: bold;");
+    
+    QPushButton *catBtn = new QPushButton("⚙ 카테고리 설정", this);
+    catBtn->setFixedWidth(110);
+    catBtn->setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc; font-size: 11px; padding: 3px; border-radius: 3px;");
+    
+    headerLayout->addWidget(m_titleLabel);
+    headerLayout->addStretch();
+    headerLayout->addWidget(catBtn);
+    mainLayout->addLayout(headerLayout);
 
     QScrollArea *scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
@@ -31,8 +42,26 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     mainLayout->addWidget(addBtn);
 
     connect(addBtn, &QPushButton::clicked, this, &ScheduleManagerWidget::openAddWidget);
+    connect(catBtn, &QPushButton::clicked, this, &ScheduleManagerWidget::openCategoryManager);
 
     refreshList();
+}
+
+void ScheduleManagerWidget::openCategoryManager() {
+    // 부모를 지정하지 않거나 Qt::Window 플래그를 통해 독립된 새 위젯(창)으로 띄움
+    CategoryModifyWidget *catModify = new CategoryModifyWidget(); 
+    catModify->setAttribute(Qt::WA_DeleteOnClose);
+    catModify->setWindowTitle("카테고리 편집");
+    
+    // 카테고리 데이터가 변경되면 현재 목록과 메인 화면을 동기화
+    connect(catModify, &CategoryModifyWidget::categoriesChanged, this, [this]() {
+        this->refreshList();
+        emit dataChanged();
+    });
+    
+    catModify->show();
+    catModify->raise();
+    catModify->activateWindow();
 }
 
 void ScheduleManagerWidget::refreshList() {
@@ -56,6 +85,7 @@ void ScheduleManagerWidget::refreshList() {
             QVBoxLayout *textLayout = new QVBoxLayout();
             QLabel *title = new QLabel(s["title"].toString(), this);
             title->setStyleSheet("font-weight: bold; border: none;");
+            
             QLabel *time = new QLabel(QString("%1 ~ %2").arg(s["start"].toString().mid(11, 5)).arg(s["end"].toString().mid(11, 5)), this);
             time->setStyleSheet("color: #666; font-size: 11px; border: none;");
 

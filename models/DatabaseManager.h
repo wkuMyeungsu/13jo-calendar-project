@@ -30,6 +30,13 @@ public:    static DatabaseManager& instance();
 
     // CRUD: Delete
     bool deleteSchedule(int id);
+
+    // Categories CRUD
+    bool addCategory(const QString& name, const QString& color);
+    QList<QVariantMap> getCategories();
+    bool updateCategory(int id, const QString& name, const QString& color);
+    bool deleteCategory(int id);
+
 private:
     DatabaseManager() = default;
     ~DatabaseManager();
