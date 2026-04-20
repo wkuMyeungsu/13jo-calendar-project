@@ -55,7 +55,7 @@ private:
 
     int m_currentYear;
     int m_currentMonth;
-    int m_yOffset;
+    int m_xOffset;
     QTimer* m_scrollTimer;
     QPropertyAnimation* m_animation;
 };

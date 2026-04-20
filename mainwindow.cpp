@@ -19,7 +19,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_yOffset(0)
+    , m_xOffset(0)
 {
     ui->setupUi(this);
 
@@ -101,56 +101,56 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     int h = ui->centralwidget->height() - kHeaderH;
 
     m_headerBar->setGeometry(0, 0, w, kHeaderH);
-    m_container->resize(w, h * 3);
+    m_container->resize(w * 3, h);
     for (int i = 0; i < 3; ++i) {
-        m_months[i]->setGeometry(0, i * h, w, h);
+        m_months[i]->setGeometry(i * w, 0, w, h);
     }
-    m_container->move(0, kHeaderH - h + m_yOffset);
+    m_container->move(-w + m_xOffset, kHeaderH);
     QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::wheelEvent(QWheelEvent* event) {
     if (m_animation->state() == QAbstractAnimation::Running) return;
 
-    m_yOffset += event->angleDelta().y() * 0.8;
+    // 위 스크롤(+) → 오른쪽(이전 달), 아래 스크롤(-) → 왼쪽(다음 달)
+    m_xOffset += event->angleDelta().y() * 0.8;
 
-    int h = ui->centralwidget->height() - kHeaderH;
+    int w = ui->centralwidget->width();
+    if (m_xOffset > w)  m_xOffset = w;
+    if (m_xOffset < -w) m_xOffset = -w;
 
-    if (m_yOffset > h) m_yOffset = h;
-    if (m_yOffset < -h) m_yOffset = -h;
-
-    m_container->move(0, kHeaderH - h + m_yOffset);
+    m_container->move(-w + m_xOffset, kHeaderH);
 
     m_scrollTimer->start(150);
     event->accept();
 }
 
 void MainWindow::finishScroll() {
-    int h = ui->centralwidget->height() - kHeaderH;
-    int threshold = h / 2;
+    int w = ui->centralwidget->width();
+    int threshold = w / 2;
 
-    int targetY;
-    if (m_yOffset > threshold) {
-        targetY = kHeaderH;
-    } else if (m_yOffset < -threshold) {
-        targetY = kHeaderH - 2 * h;
+    int targetX;
+    if (m_xOffset > threshold) {
+        targetX = 0;        // 이전 달 (컨테이너 오른쪽 끝)
+    } else if (m_xOffset < -threshold) {
+        targetX = -2 * w;   // 다음 달 (컨테이너 왼쪽 끝)
     } else {
-        targetY = kHeaderH - h;
+        targetX = -w;       // 현재 달 (중앙)
     }
 
     m_animation->setStartValue(m_container->pos());
-    m_animation->setEndValue(QPoint(0, targetY));
+    m_animation->setEndValue(QPoint(targetX, kHeaderH));
 
-    connect(m_animation, &QPropertyAnimation::finished, [this, targetY, h]() {
+    connect(m_animation, &QPropertyAnimation::finished, [this, targetX, w]() {
         m_animation->disconnect(SIGNAL(finished()));
-        if (targetY == kHeaderH) {
+        if (targetX == 0) {
             m_currentMonth--;
             if (m_currentMonth < 1) { m_currentMonth = 12; m_currentYear--; }
-        } else if (targetY == kHeaderH - 2 * h) {
+        } else if (targetX == -2 * w) {
             m_currentMonth++;
             if (m_currentMonth > 12) { m_currentMonth = 1; m_currentYear++; }
         }
-        m_yOffset = 0;
+        m_xOffset = 0;
         updateCalendar();
     });
 
@@ -162,10 +162,15 @@ void MainWindow::updateCalendar() {
     setWindowTitle(title);
     m_monthLabel->setText(title);
 
+    int w = ui->centralwidget->width();
     int h = ui->centralwidget->height() - kHeaderH;
+    if (w <= 0) w = 800;
     if (h <= 0) h = 600 - kHeaderH;
 
-    m_container->move(0, kHeaderH - h);
+    m_container->resize(w * 3, h);
+    for (int i = 0; i < 3; ++i)
+        m_months[i]->setGeometry(i * w, 0, w, h);
+    m_container->move(-w, kHeaderH);
 
     QDate current(m_currentYear, m_currentMonth, 1);
     QDate prev = current.addMonths(-1);
@@ -178,18 +183,32 @@ void MainWindow::updateCalendar() {
 
 void MainWindow::prevMonth() {
     if (m_animation->state() == QAbstractAnimation::Running) return;
-    m_currentMonth--;
-    if (m_currentMonth < 1) { m_currentMonth = 12; m_currentYear--; }
-    m_yOffset = 0;
-    updateCalendar();
+    int w = ui->centralwidget->width();
+    m_animation->setStartValue(m_container->pos());
+    m_animation->setEndValue(QPoint(0, kHeaderH));
+    connect(m_animation, &QPropertyAnimation::finished, [this]() {
+        m_animation->disconnect(SIGNAL(finished()));
+        m_currentMonth--;
+        if (m_currentMonth < 1) { m_currentMonth = 12; m_currentYear--; }
+        m_xOffset = 0;
+        updateCalendar();
+    });
+    m_animation->start();
 }
 
 void MainWindow::nextMonth() {
     if (m_animation->state() == QAbstractAnimation::Running) return;
-    m_currentMonth++;
-    if (m_currentMonth > 12) { m_currentMonth = 1; m_currentYear++; }
-    m_yOffset = 0;
-    updateCalendar();
+    int w = ui->centralwidget->width();
+    m_animation->setStartValue(m_container->pos());
+    m_animation->setEndValue(QPoint(-2 * w, kHeaderH));
+    connect(m_animation, &QPropertyAnimation::finished, [this]() {
+        m_animation->disconnect(SIGNAL(finished()));
+        m_currentMonth++;
+        if (m_currentMonth > 12) { m_currentMonth = 1; m_currentYear++; }
+        m_xOffset = 0;
+        updateCalendar();
+    });
+    m_animation->start();
 }
 
 void MainWindow::goToday() {
@@ -197,7 +216,7 @@ void MainWindow::goToday() {
     QDate today = QDate::currentDate();
     m_currentYear = today.year();
     m_currentMonth = today.month();
-    m_yOffset = 0;
+    m_xOffset = 0;
     updateCalendar();
 }
 
