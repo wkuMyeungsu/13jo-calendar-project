@@ -1,0 +1,36 @@
+# .gitignore
+
+# === Qt / C++ Build Artifacts ===
+# 빌드 결과물 전체 제외
+build/
+debug/
+release/
+*.o
+*.obj
+*.exe
+*.a
+*.lib
+*.dll
+
+# === Qt Creator Settings ===
+# 개인별 환경 설정 파일 (절대 올리면 안 됨)
+*.user
+*.user.*
+.qtcreator/
+
+# === CMake (만약 CMake를 사용한다면) ===
+CMakeLists.txt.user
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install/
+
+# === OS & IDE 캐시 ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# === Clangd (코딩 보조 도구 캐시) ===
+.qtc_clangd/
+.cache/
