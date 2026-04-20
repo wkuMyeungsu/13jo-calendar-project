@@ -41,6 +41,7 @@ void MonthWidget::updateMonth(int year, int month, const QList<QVariantMap>& sch
         cell->setSchedules(daySchedules);
         
         connect(cell, &DayCell::dayDoubleClicked, this, &MonthWidget::dayDoubleClicked);
+        connect(cell, &DayCell::addRequested, this, &MonthWidget::addRequested);
 
         int row = (day + startCol - 1) / 7;
         int col = (day + startCol - 1) % 7;

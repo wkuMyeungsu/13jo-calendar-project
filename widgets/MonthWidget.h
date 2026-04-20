@@ -14,6 +14,7 @@ public:
 
 signals:
     void dayDoubleClicked(const QDate& date);
+    void addRequested(const QDate& date);
 
 private:
     QGridLayout* m_gridLayout;

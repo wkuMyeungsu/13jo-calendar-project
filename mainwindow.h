@@ -29,6 +29,7 @@ protected:
 private slots:
     void updateCalendar();
     void handleDayDoubleClicked(const QDate& date);
+    void handleDayAddRequested(const QDate& date);
     void finishScroll(); // 휠 중지 시 스냅 처리
 
 private:

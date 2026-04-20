@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     for (int i = 0; i < 3; ++i) {
         m_months[i] = new MonthWidget(m_container);
         connect(m_months[i], &MonthWidget::dayDoubleClicked, this, &MainWindow::handleDayDoubleClicked);
+        connect(m_months[i], &MonthWidget::addRequested, this, &MainWindow::handleDayAddRequested);
     }
 
     // 타이머 및 애니메이션 설정
@@ -141,6 +142,18 @@ void MainWindow::handleDayDoubleClicked(const QDate& date) {
     });
     
     managerWidget->show();
+}
+
+void MainWindow::handleDayAddRequested(const QDate& date) {
+    qDebug() << "Add requested for date:" << date.toString();
+    ScheduleInputWidget *inputWidget = new ScheduleInputWidget(date);
+    inputWidget->setAttribute(Qt::WA_DeleteOnClose);
+    inputWidget->setWindowTitle(date.toString("yyyy-MM-dd") + " 일정 추가");
+    inputWidget->setWindowModality(Qt::ApplicationModal);
+    
+    connect(inputWidget, &ScheduleInputWidget::scheduleSaved, this, &MainWindow::updateCalendar);
+    
+    inputWidget->show();
 }
 
 MainWindow::~MainWindow() {

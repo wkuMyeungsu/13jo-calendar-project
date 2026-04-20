@@ -9,6 +9,8 @@
 #include <QVBoxLayout>
 #include <QVariantMap>
 
+#include <QPushButton>
+
 class DayCell : public QFrame {
     Q_OBJECT
 public:
@@ -18,6 +20,7 @@ public:
 
 signals:
     void dayDoubleClicked(const QDate& date);
+    void addRequested(const QDate& date);
 
 protected:
     void enterEvent(QEnterEvent* e) override;
@@ -27,7 +30,7 @@ protected:
 private:
     QDate m_date;
     QLabel* m_dateLabel;
-    QLabel* m_plusHint;
+    QPushButton* m_plusButton; // QLabel에서 QPushButton으로 변경
     QVBoxLayout* m_scheduleLayout;
     QGraphicsOpacityEffect* m_plusOpacity;
     QPropertyAnimation* m_plusAnim;
