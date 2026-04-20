@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --build build)",
+      "Bash(/c/Qt/Tools/mingw1310_64/bin/mingw32-make)"
+    ]
+  }
+}

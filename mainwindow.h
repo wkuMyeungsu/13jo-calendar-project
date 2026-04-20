@@ -5,6 +5,8 @@
 #include <QWheelEvent>
 #include <QPropertyAnimation>
 #include <QTimer>
+#include <QLabel>
+#include <QPushButton>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -30,18 +32,30 @@ private slots:
     void updateCalendar();
     void handleDayDoubleClicked(const QDate& date);
     void handleDayAddRequested(const QDate& date);
-    void finishScroll(); // 휠 중지 시 스냅 처리
+    void finishScroll();
+    void prevMonth();
+    void nextMonth();
+    void goToday();
 
 private:
+    static constexpr int kHeaderH = 52;
+
     Ui::MainWindow *ui;
-    
-    // 애니메이션 관련
+
+    // 네비게이션 헤더
+    QWidget*     m_headerBar;
+    QLabel*      m_monthLabel;
+    QPushButton* m_prevBtn;
+    QPushButton* m_nextBtn;
+    QPushButton* m_todayBtn;
+
+    // 캘린더 컨테이너
     QWidget* m_container;
-    MonthWidget* m_months[3]; // 0: 이전달, 1: 이번달, 2: 다음달
-    
+    MonthWidget* m_months[3];
+
     int m_currentYear;
     int m_currentMonth;
-    int m_yOffset;      // 현재 스크롤 오프셋
+    int m_yOffset;
     QTimer* m_scrollTimer;
     QPropertyAnimation* m_animation;
 };

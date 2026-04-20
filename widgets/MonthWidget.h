@@ -3,8 +3,12 @@
 
 #include <QWidget>
 #include <QGridLayout>
+#include <QLabel>
 #include <QDate>
 #include <QVariantMap>
+#include <QList>
+
+class DayCell;
 
 class MonthWidget : public QWidget {
     Q_OBJECT
@@ -17,7 +21,8 @@ signals:
     void addRequested(const QDate& date);
 
 private:
-    QGridLayout* m_gridLayout;
+    QGridLayout*   m_gridLayout;
+    QList<DayCell*> m_cells;
 };
 
 #endif // MONTHWIDGET_H

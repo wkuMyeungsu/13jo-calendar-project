@@ -18,21 +18,25 @@ public:
     void setDate(const QDate& date);
     void setSchedules(const QList<QVariantMap>& schedules);
 
-signals:
+    signals:
     void dayDoubleClicked(const QDate& date);
     void addRequested(const QDate& date);
 
-protected:
+    protected:
     void enterEvent(QEnterEvent* e) override;
     void leaveEvent(QEvent* e) override;
     void mouseDoubleClickEvent(QMouseEvent* e) override;
+    void resizeEvent(QResizeEvent* e) override;
 
-private:
+    private:
     QDate m_date;
     QLabel* m_dateLabel;
-    QPushButton* m_plusButton; // QLabel에서 QPushButton으로 변경
+    QPushButton* m_plusButton;
     QVBoxLayout* m_scheduleLayout;
     QGraphicsOpacityEffect* m_plusOpacity;
     QPropertyAnimation* m_plusAnim;
-};
+    QList<QVariantMap> m_currentSchedules; 
+    bool m_wasTimeShown; 
+    int m_lastMaxSchedules; // 이전에 표시했던 최대 일정 개수 저장
+    };
 #endif // DAYCELL_H

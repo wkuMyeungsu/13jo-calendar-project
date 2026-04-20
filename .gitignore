@@ -34,3 +34,5 @@ Thumbs.db
 # === Clangd (코딩 보조 도구 캐시) ===
 .qtc_clangd/
 .cache/
+
+CLAUDE.md
