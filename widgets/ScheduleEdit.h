@@ -7,6 +7,8 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QLabel>
+#include <QCheckBox>
+#include <QTextEdit>
 
 class ScheduleInputWidget : public QWidget {
     Q_OBJECT
@@ -18,12 +20,15 @@ signals:
 
 private slots:
     void handleSave();
+    void toggleAllDay(bool checked);
 
 private:
     QLineEdit *titleInput;
     QComboBox *categoryCombo;
+    QCheckBox *allDayCheck;
     QDateTimeEdit *startTimeEdit;
     QDateTimeEdit *endTimeEdit;
+    QTextEdit *contentInput;
     QPushButton *saveBtn;
 };
 

@@ -69,7 +69,13 @@ void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
         }
         QLabel* label = new QLabel(schedule["title"].toString(), this);
         QString color = schedule["color"].toString();
-        label->setStyleSheet(QString("background-color: %1; color: white; border-radius: 2px; padding: 1px; font-size: 10px;").arg(color));
+        label->setStyleSheet(QString(""
+                                     "background-color: %1;"
+                                     " color: white;"
+                                     " border-radius: 2px;"
+                                     " padding: 1px;"
+                                     " font-size: 10px;"
+                                     "").arg(color));
         label->setToolTip(schedule["title"].toString());
         m_scheduleLayout->addWidget(label);
         count++;
