@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -20,13 +21,15 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(13jo-calendar-project
+
+qt_add_executable(13jo-calendar-project
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         widgets/DayCell.h
         widgets/DayCell.cpp
-        models/DatabaseManager.h
-        models/DatabaseManager.cpp
+        widgets/ScheduleEdit.cpp
+        widgets/ScheduleEdit.h
+
 
 
     )
@@ -48,7 +51,8 @@ else()
     endif()
 endif()
 
-target_link_libraries(13jo-calendar-project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(13jo-calendar-project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
+                                            Qt${QT_VERSION_MAJOR}::Sql)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
@@ -62,6 +66,12 @@ set_target_properties(13jo-calendar-project PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+)
+
+target_include_directories(13jo-calendar-project PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/widgets
+    ${CMAKE_CURRENT_SOURCE_DIR}/models
 )
 
 include(GNUInstallDirs)
