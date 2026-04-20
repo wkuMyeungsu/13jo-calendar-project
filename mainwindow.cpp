@@ -35,27 +35,61 @@ MainWindow::MainWindow(QWidget *parent)
     m_headerBar = new QWidget(ui->centralwidget);
     m_headerBar->setStyleSheet("QWidget { background-color: white; border-bottom: 1px solid #E0E0E0; }");
 
-    // 카테고리 토글 레이아웃 (좌측)
-    m_categoryLayout = new QHBoxLayout();
-    m_categoryLayout->setContentsMargins(10, 0, 0, 0);
-    m_categoryLayout->setSpacing(6);
-
-    m_prevBtn = new QPushButton("◀", m_headerBar);
-    m_monthLabel = new QLabel(m_headerBar);
-    m_monthLabel->setStyleSheet("font-size: 17px; font-weight: bold; color: #222; border: none;");
-    m_nextBtn = new QPushButton("▶", m_headerBar);
-    m_todayBtn = new QPushButton("오늘", m_headerBar);
-
+    // 전체 헤더 레이아웃
     QHBoxLayout* headerLayout = new QHBoxLayout(m_headerBar);
-    headerLayout->setContentsMargins(12, 0, 12, 0);
-    
-    headerLayout->addLayout(m_categoryLayout); // 좌측에 배치
-    headerLayout->addStretch();
-    headerLayout->addWidget(m_prevBtn);
-    headerLayout->addWidget(m_monthLabel);
-    headerLayout->addWidget(m_nextBtn);
-    headerLayout->addStretch();
-    headerLayout->addWidget(m_todayBtn);
+    headerLayout->setContentsMargins(15, 0, 15, 0);
+    headerLayout->setSpacing(0);
+
+    // [좌측 영역] 카테고리 토글 레이아웃
+    QWidget* leftGroup = new QWidget(m_headerBar);
+    m_categoryLayout = new QHBoxLayout(leftGroup);
+    m_categoryLayout->setContentsMargins(0, 0, 0, 0);
+    m_categoryLayout->setSpacing(6);
+    m_categoryLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    // [중앙 영역] 월 표시 및 이동 버튼
+    QWidget* centerGroup = new QWidget(m_headerBar);
+    QHBoxLayout* centerLayout = new QHBoxLayout(centerGroup);
+    centerLayout->setContentsMargins(0, 0, 0, 0);
+    centerLayout->setSpacing(10);
+    centerLayout->setAlignment(Qt::AlignCenter);
+
+    m_prevBtn = new QPushButton("◀", centerGroup);
+    m_prevBtn->setCursor(Qt::PointingHandCursor);
+    m_prevBtn->setFixedSize(30, 30);
+    m_prevBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: #4A90E2; }");
+
+    m_monthLabel = new QLabel(centerGroup);
+    m_monthLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #222; border: none;");
+    m_monthLabel->setAlignment(Qt::AlignCenter);
+
+    m_nextBtn = new QPushButton("▶", centerGroup);
+    m_nextBtn->setCursor(Qt::PointingHandCursor);
+    m_nextBtn->setFixedSize(30, 30);
+    m_nextBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: #4A90E2; }");
+
+    centerLayout->addWidget(m_prevBtn);
+    centerLayout->addWidget(m_monthLabel);
+    centerLayout->addWidget(m_nextBtn);
+
+    // [우측 영역] 오늘 버튼
+    QWidget* rightGroup = new QWidget(m_headerBar);
+    QHBoxLayout* rightLayout = new QHBoxLayout(rightGroup);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
+    rightLayout->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    m_todayBtn = new QPushButton("오늘", rightGroup);
+    m_todayBtn->setCursor(Qt::PointingHandCursor);
+    m_todayBtn->setStyleSheet(
+        "QPushButton { border: 1px solid #BDBDBD; border-radius: 4px; padding: 4px 15px; font-size: 12px; color: #333; background: white; }"
+        "QPushButton:hover { border-color: #4A90E2; color: #4A90E2; }"
+    );
+    rightLayout->addWidget(m_todayBtn);
+
+    // 헤더 레이아웃에 좌/중/우 배치 (좌우에 동일한 Stretch를 주어 중앙 고정)
+    headerLayout->addWidget(leftGroup, 1);
+    headerLayout->addWidget(centerGroup, 0);
+    headerLayout->addWidget(rightGroup, 1);
 
     connect(m_prevBtn,  &QPushButton::clicked, this, &MainWindow::prevMonth);
     connect(m_nextBtn,  &QPushButton::clicked, this, &MainWindow::nextMonth);
@@ -82,7 +116,6 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 void MainWindow::updateCategoryBar() {
-    // 기존 버튼 제거
     QLayoutItem *item;
     while ((item = m_categoryLayout->takeAt(0)) != nullptr) {
         if (item->widget()) delete item->widget();
@@ -97,7 +130,7 @@ void MainWindow::updateCategoryBar() {
 
         if (!m_categoryFilters.contains(id)) m_categoryFilters[id] = true;
 
-        QPushButton* btn = new QPushButton(name, m_headerBar);
+        QPushButton* btn = new QPushButton(name, this);
         btn->setCheckable(true);
         btn->setChecked(m_categoryFilters[id]);
         btn->setStyleSheet(QString(
@@ -109,33 +142,14 @@ void MainWindow::updateCategoryBar() {
             m_categoryFilters[id] = checked;
             updateCalendar();
         });
-
         m_categoryLayout->addWidget(btn);
     }
 
-    // 카테고리 설정용 (+) 버튼 추가
-    QPushButton* addBtn = new QPushButton("+", m_headerBar);
+    QPushButton* addBtn = new QPushButton("+", this);
     addBtn->setFixedSize(22, 22);
-    addBtn->setStyleSheet(
-        "QPushButton { border: 1px solid #ccc; border-radius: 11px; background: #f9f9f9; color: #666; font-weight: bold; font-size: 14px; } "
-        "QPushButton:hover { background: #e9e9e9; color: #333; }"
-    );
+    addBtn->setStyleSheet("QPushButton { border: 1px solid #ccc; border-radius: 11px; background: #f9f9f9; color: #666; font-weight: bold; font-size: 14px; } QPushButton:hover { background: #e9e9e9; color: #333; }");
     connect(addBtn, &QPushButton::clicked, this, &MainWindow::openCategoryManager);
     m_categoryLayout->addWidget(addBtn);
-}
-
-void MainWindow::openCategoryManager() {
-    CategoryModifyWidget *catModify = new CategoryModifyWidget(); 
-    catModify->setAttribute(Qt::WA_DeleteOnClose);
-    catModify->setWindowTitle("카테고리 설정");
-    
-    // 카테고리 변경 시 메인 윈도우 즉시 갱신
-    connect(catModify, &CategoryModifyWidget::categoriesChanged, this, &MainWindow::updateCategoryBar);
-    connect(catModify, &CategoryModifyWidget::categoriesChanged, this, &MainWindow::updateCalendar);
-    
-    catModify->show();
-    catModify->raise();
-    catModify->activateWindow();
 }
 
 void MainWindow::updateCalendar() {
@@ -159,9 +173,7 @@ void MainWindow::updateCalendar() {
         QList<QVariantMap> raw = DatabaseManager::instance().getSchedulesForMonth(year, month);
         QList<QVariantMap> filtered;
         for (const auto& s : raw) {
-            if (m_categoryFilters.value(s["category_id"].toInt(), true)) {
-                filtered.append(s);
-            }
+            if (m_categoryFilters.value(s["category_id"].toInt(), true)) filtered.append(s);
         }
         return filtered;
     };
@@ -256,6 +268,17 @@ void MainWindow::handleDayAddRequested(const QDate& date) {
     inputWidget->setWindowModality(Qt::ApplicationModal);
     connect(inputWidget, &ScheduleInputWidget::scheduleSaved, this, &MainWindow::updateCalendar);
     inputWidget->show();
+}
+
+void MainWindow::openCategoryManager() {
+    CategoryModifyWidget *catModify = new CategoryModifyWidget(); 
+    catModify->setAttribute(Qt::WA_DeleteOnClose);
+    catModify->setWindowTitle("카테고리 설정");
+    connect(catModify, &CategoryModifyWidget::categoriesChanged, this, &MainWindow::updateCategoryBar);
+    connect(catModify, &CategoryModifyWidget::categoriesChanged, this, &MainWindow::updateCalendar);
+    catModify->show();
+    catModify->raise();
+    catModify->activateWindow();
 }
 
 MainWindow::~MainWindow() { delete ui; }
