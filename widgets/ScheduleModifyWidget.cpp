@@ -13,18 +13,21 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     QFormLayout *formLayout = new QFormLayout();
+titleInput = new QLineEdit(this);
+titleInput->setText(scheduleData["title"].toString());
 
-    titleInput = new QLineEdit(this);
-    titleInput->setText(scheduleData["title"].toString());
+categoryCombo = new QComboBox(this);
+// 카테고리 로드
+QList<QVariantMap> categories = DatabaseManager::instance().getCategories();
+for (const auto& cat : categories) {
+    categoryCombo->addItem(cat["name"].toString(), cat["id"]);
+}
 
-    categoryCombo = new QComboBox(this);
-    categoryCombo->addItem("Work", 1);
-    categoryCombo->addItem("Personal", 2);
-    categoryCombo->addItem("Other", 3);
-    int catIdx = categoryCombo->findData(scheduleData["category_id"]);
-    if (catIdx != -1) categoryCombo->setCurrentIndex(catIdx);
+// 현재 카테고리 설정
+int catIdx = categoryCombo->findData(scheduleData["category_id"]);
+if (catIdx != -1) categoryCombo->setCurrentIndex(catIdx);
 
-    colorBtn = new QPushButton("Pick Color", this);
+colorBtn = new QPushButton("Pick Color", this);
     colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold;").arg(m_selectedColor));
 
     allDayCheck = new QCheckBox("All Day", this);

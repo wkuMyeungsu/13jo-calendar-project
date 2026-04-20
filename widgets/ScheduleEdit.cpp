@@ -14,9 +14,11 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     titleInput->setPlaceholderText("일정 제목");
 
     categoryCombo = new QComboBox(this);
-    categoryCombo->addItem("Work", 1);
-    categoryCombo->addItem("Personal", 2);
-    categoryCombo->addItem("Other", 3);
+    // 카테고리 로드
+    QList<QVariantMap> categories = DatabaseManager::instance().getCategories();
+    for (const auto& cat : categories) {
+        categoryCombo->addItem(cat["name"].toString(), cat["id"]);
+    }
 
     m_selectedColor = "#4A90E2"; // 기본 색상
     colorBtn = new QPushButton("Pick Color", this);

@@ -17,7 +17,7 @@ bool DatabaseManager::initDatabase(const QString& dbName) {
     if (!m_db.open()) return false;
 
     QSqlQuery query;
-    QString createTable =
+    QString createSchedulesTable =
         "CREATE TABLE IF NOT EXISTS schedules ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "category_id INTEGER DEFAULT 0, "
@@ -28,7 +28,26 @@ bool DatabaseManager::initDatabase(const QString& dbName) {
         "color TEXT"
         ")";
 
-    return query.exec(createTable);
+    if (!query.exec(createSchedulesTable)) return false;
+
+    QString createCategoriesTable =
+        "CREATE TABLE IF NOT EXISTS categories ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "name TEXT NOT NULL, "
+        "color TEXT"
+        ")";
+
+    if (!query.exec(createCategoriesTable)) return false;
+
+    // 기본 카테고리 생성 (처음 한 번만)
+    query.exec("SELECT COUNT(*) FROM categories");
+    if (query.next() && query.value(0).toInt() == 0) {
+        addCategory("Work", "#4A90E2");
+        addCategory("Personal", "#4CAF50");
+        addCategory("Other", "#9E9E9E");
+    }
+
+    return true;
 }
 
 bool DatabaseManager::addSchedule(int categoryId, const QString& title, const QString& content,
@@ -56,8 +75,6 @@ QList<QVariantMap> DatabaseManager::getSchedulesForMonth(int year, int month) {
     QString startRange = firstDay.toString("yyyy-MM-dd 00:00:00");
     QString endRange = lastDay.toString("yyyy-MM-dd 23:59:59");
 
-    // 해당 월의 범위와 겹치는 모든 일정 조회
-    // (일정 시작일 <= 월 말일) AND (일정 종료일 >= 월 시작일)
     query.prepare("SELECT * FROM schedules WHERE start_time <= :endRange AND end_time >= :startRange ORDER BY start_time ASC");
     query.bindValue(":startRange", startRange);
     query.bindValue(":endRange", endRange);
@@ -84,7 +101,6 @@ QList<QVariantMap> DatabaseManager::getSchedulesForDay(const QDate& date) {
     QString dateStart = date.toString("yyyy-MM-dd 00:00:00");
     QString dateEnd = date.toString("yyyy-MM-dd 23:59:59");
 
-    // 해당 날짜를 포함하는(겹치는) 모든 일정 조회
     query.prepare("SELECT * FROM schedules WHERE start_time <= :dateEnd AND end_time >= :dateStart ORDER BY start_time ASC");
     query.bindValue(":dateStart", dateStart);
     query.bindValue(":dateEnd", dateEnd);
@@ -112,7 +128,7 @@ bool DatabaseManager::updateSchedule(int id, int categoryId, const QString& titl
                   "start_time = :start, end_time = :end, color = :color "
                   "WHERE id = :id");
 
-    query.bindValue(":cat_id", categoryId); // 업데이트 항목에 추가
+    query.bindValue(":cat_id", categoryId);
     query.bindValue(":title", title);
     query.bindValue(":content", content);
     query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
@@ -126,6 +142,48 @@ bool DatabaseManager::updateSchedule(int id, int categoryId, const QString& titl
 bool DatabaseManager::deleteSchedule(int id) {
     QSqlQuery query;
     query.prepare("DELETE FROM schedules WHERE id = :id");
+    query.bindValue(":id", id);
+    return query.exec();
+}
+
+bool DatabaseManager::addCategory(const QString& name, const QString& color) {
+    QSqlQuery query;
+    query.prepare("INSERT INTO categories (name, color) VALUES (:name, :color)");
+    query.bindValue(":name", name);
+    query.bindValue(":color", color);
+    return query.exec();
+}
+
+QList<QVariantMap> DatabaseManager::getCategories() {
+    QList<QVariantMap> categories;
+    QSqlQuery query("SELECT * FROM categories ORDER BY id ASC");
+    while (query.next()) {
+        QVariantMap item;
+        item["id"] = query.value("id");
+        item["name"] = query.value("name");
+        item["color"] = query.value("color");
+        categories.append(item);
+    }
+    return categories;
+}
+
+bool DatabaseManager::updateCategory(int id, const QString& name, const QString& color) {
+    QSqlQuery query;
+    query.prepare("UPDATE categories SET name = :name, color = :color WHERE id = :id");
+    query.bindValue(":name", name);
+    query.bindValue(":color", color);
+    query.bindValue(":id", id);
+    return query.exec();
+}
+
+bool DatabaseManager::deleteCategory(int id) {
+    QSqlQuery updateSchedules;
+    updateSchedules.prepare("UPDATE schedules SET category_id = 0 WHERE category_id = :id");
+    updateSchedules.bindValue(":id", id);
+    updateSchedules.exec();
+
+    QSqlQuery query;
+    query.prepare("DELETE FROM categories WHERE id = :id");
     query.bindValue(":id", id);
     return query.exec();
 }
