@@ -22,7 +22,6 @@ private slots:
     void refreshList();
     void openAddWidget();
     void openEditWidget(const QVariantMap& data);
-    void openCategoryManager();
 
 private:
     QDate m_date;

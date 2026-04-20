@@ -7,6 +7,8 @@
 #include <QTimer>
 #include <QLabel>
 #include <QPushButton>
+#include <QHBoxLayout>
+#include <QMap>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,8 +30,12 @@ protected:
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
-private slots:
+public slots:
     void updateCalendar();
+    void updateCategoryBar(); // 카테고리 버튼 바 생성/갱신
+    void openCategoryManager(); // 카테고리 편집기 열기
+
+private slots:
     void handleDayDoubleClicked(const QDate& date);
     void handleDayAddRequested(const QDate& date);
     void finishScroll();
@@ -48,6 +54,10 @@ private:
     QPushButton* m_prevBtn;
     QPushButton* m_nextBtn;
     QPushButton* m_todayBtn;
+    
+    // 카테고리 필터링
+    QHBoxLayout* m_categoryLayout;
+    QMap<int, bool> m_categoryFilters;
 
     // 캘린더 컨테이너
     QWidget* m_container;
