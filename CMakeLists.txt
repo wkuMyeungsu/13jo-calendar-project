@@ -23,6 +23,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(13jo-calendar-project
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        widgets/DayCell.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET 13jo-calendar-project APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
