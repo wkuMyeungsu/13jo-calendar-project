@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "DatabaseManager.h"
+#include "./models/DatabaseManager.h"
 #include "./widgets/DayCell.h"
 
 #include <QSqlDatabase>
