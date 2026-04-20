@@ -5,6 +5,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDate>
+#include <QDateTime>
 #include <QDebug>
 #include <QList>
 #include <QVariantMap>

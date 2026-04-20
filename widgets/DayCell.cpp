@@ -1,10 +1,17 @@
 #include "DayCell.h"
 #include <QVBoxLayout>
 #include <QMouseEvent>
+#include <QGraphicsOpacityEffect>
 
 DayCell::DayCell(QWidget* parent) : QFrame(parent) {
-    setFrameStyle(QFrame::Box | QFrame::Plain);
-    setFixedSize(120, 120); // 크기를 조금 늘림
+    // 테두리 스타일을 CSS로 제어하기 위해 기본 프레임 설정 변경
+    setFrameStyle(QFrame::NoFrame);
+    
+    // 기본 최소 크기만 지정 (고정 크기 제거)
+    setMinimumSize(50, 50);
+    
+    // 외곽선이 겹치지 않도록 스타일 시트 적용
+    setStyleSheet("DayCell { border: 0.5px solid #E0E0E0; background-color: white; }");
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(2, 2, 2, 2);
@@ -58,7 +65,6 @@ void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
         delete item;
     }
 
-    // 최대 3개까지만 표시
     int count = 0;
     for (const auto& schedule : schedules) {
         if (count >= 3) {
@@ -67,16 +73,52 @@ void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
             m_scheduleLayout->addWidget(moreLabel);
             break;
         }
-        QLabel* label = new QLabel(schedule["title"].toString(), this);
+
+        QDateTime start = QDateTime::fromString(schedule["start"].toString(), "yyyy-MM-dd HH:mm:ss");
+        QDateTime end = QDateTime::fromString(schedule["end"].toString(), "yyyy-MM-dd HH:mm:ss");
+
+        bool isStartDay = (start.date() == m_date);
+        bool isEndDay = (end.date() == m_date);
+        
+        // 하루종일 여부 판단 (시간이 00:00~23:59 이거나 기간이 1일 이상인 경우)
+        bool isAllDay = (start.time() <= QTime(0, 0, 5) && end.time() >= QTime(23, 59, 0)) 
+                        || (start.date() != end.date());
+
+        QLabel* label = new QLabel(this);
+        
+        // 텍스트 설정: 시작일이거나 매주 첫날(일요일)일 때 제목 표시
+        if (isStartDay || m_date.dayOfWeek() == 7 || m_date.day() == 1) {
+            label->setText(schedule["title"].toString());
+        }
+
         QString color = schedule["color"].toString();
-        label->setStyleSheet(QString(""
-                                     "background-color: %1;"
-                                     " color: white;"
-                                     " border-radius: 2px;"
-                                     " padding: 1px;"
-                                     " font-size: 10px;"
-                                     "").arg(color));
-        label->setToolTip(schedule["title"].toString());
+        QString style;
+
+        if (isAllDay) {
+            // 연속된 바 스타일
+            QString leftRadius = isStartDay ? "4px" : "0px";
+            QString rightRadius = isEndDay ? "4px" : "0px";
+            QString marginLeft = isStartDay ? "2px" : "0px";
+            QString marginRight = isEndDay ? "2px" : "0px";
+
+            style = QString("background-color: %1; color: white; "
+                            "border-top-left-radius: %2; border-bottom-left-radius: %2; "
+                            "border-top-right-radius: %3; border-bottom-right-radius: %3; "
+                            "margin-left: %4; margin-right: %5; "
+                            "padding: 1px; font-size: 10px; font-weight: bold;")
+                    .arg(color).arg(leftRadius).arg(rightRadius).arg(marginLeft).arg(marginRight);
+        } else {
+            // 배경색 없는 강조 스타일
+            style = QString("background-color: transparent; color: %1; "
+                            "font-weight: bold; font-size: 10px; padding: 1px;")
+                    .arg(color);
+            label->setText("• " + label->text());
+        }
+
+        label->setStyleSheet(style);
+        label->setToolTip(QString("%1\n%2 ~ %3").arg(schedule["title"].toString())
+                          .arg(start.toString("MM/dd HH:mm")).arg(end.toString("MM/dd HH:mm")));
+        
         m_scheduleLayout->addWidget(label);
         count++;
     }
