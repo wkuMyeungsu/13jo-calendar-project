@@ -195,18 +195,34 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
 
 void MainWindow::wheelEvent(QWheelEvent* event) {
     if (m_animation->state() == QAbstractAnimation::Running) return;
-    m_xOffset += event->angleDelta().y() * 0.8;
+
+    // 감도 향상: 배율을 0.8에서 1.5로 상향
+    m_xOffset += event->angleDelta().y() * 1.5;
+
     int w = ui->centralwidget->width();
-    if (m_xOffset > w) m_xOffset = w;
+    if (m_xOffset > w)  m_xOffset = w;
     if (m_xOffset < -w) m_xOffset = -w;
+
     m_container->move(-w + m_xOffset, kHeaderH);
+
     m_scrollTimer->start(150);
     event->accept();
 }
 
 void MainWindow::finishScroll() {
     int w = ui->centralwidget->width();
-    int targetX = (m_xOffset > w/2) ? 0 : (m_xOffset < -w/2) ? -2*w : -w;
+    // 슬라이드 1/6 밀면 스냅 동작
+    int threshold = w / 6;
+
+    int targetX;
+    if (m_xOffset > threshold) {
+        targetX = 0;        // 이전 달로 자석처럼 붙음
+    } else if (m_xOffset < -threshold) {
+        targetX = -2 * w;   // 다음 달로 자석처럼 붙음
+    } else {
+        targetX = -w;       // 제자리
+    }
+
     m_animation->setStartValue(m_container->pos());
     m_animation->setEndValue(QPoint(targetX, kHeaderH));
     connect(m_animation, &QPropertyAnimation::finished, [this, targetX, w]() {
