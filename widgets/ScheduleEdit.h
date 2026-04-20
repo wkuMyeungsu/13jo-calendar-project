@@ -11,7 +11,7 @@
 class ScheduleInputWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ScheduleInputWidget(QWidget *parent = nullptr);
+    explicit ScheduleInputWidget(const QDate& initialDate = QDate::currentDate(), QWidget *parent = nullptr);
 
 signals:
     void scheduleSaved();

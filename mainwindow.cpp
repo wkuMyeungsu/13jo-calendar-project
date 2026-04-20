@@ -1,7 +1,7 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
-#include "./models/DatabaseManager.h"
-#include "./widgets/DayCell.h"
+#include "ui_mainwindow.h"
+#include "DatabaseManager.h"
+#include "DayCell.h"
 #include "ScheduleEdit.h"
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -40,42 +40,73 @@ MainWindow::MainWindow(QWidget *parent)
     // 1. DB 초기화
     if (!DatabaseManager::instance().initDatabase("calendar_data.db")) {
         qDebug() << "Database initialization failed.";
-        return;
-    }
-    qDebug() << "Database Initialized";
-
-    // 2. CREATE 테스트 (카테고리 ID: 1 부여)
-    QDateTime start = QDateTime::currentDateTime();
-    QDateTime end = start.addSecs(3600); // 1시간 일정
-    DatabaseManager::instance().addSchedule(1, "Test Schedule", "Description", start, end, "#FF5733");
-    qDebug() << "Step 1: Data Added (Category 1)";
-    printCurrentDbState();
-
-    // 3. UPDATE 테스트 (가장 최근 데이터의 ID 사용)
-    QList<QVariantMap> list = DatabaseManager::instance().getSchedulesForDay(start.date());
-    if (!list.isEmpty()) {
-        int targetId = list.last()["id"].toInt();
-        QDateTime newEnd = start.addSecs(7200); // 2시간으로 연장
-
-        // 카테고리 ID를 2로 변경하며 업데이트
-        DatabaseManager::instance().updateSchedule(targetId, 2, "Updated Title", "New Desc", start, newEnd, "#00FF00");
-        qDebug() << "Step 2: Data Updated (ID:" << targetId << " -> Category 2)";
-        printCurrentDbState();
-
-        // 4. DELETE 테스트
-        // DatabaseManager::instance().deleteSchedule(targetId);
-        // qDebug() << "Step 3: Data Deleted (ID:" << targetId << ")";
-        // printCurrentDbState();
     }
 
-    //인풋 창 테스트
-    ScheduleInputWidget *inputWidget = new ScheduleInputWidget();
-    inputWidget->setAttribute(Qt::WA_DeleteOnClose); // 창을 닫으면 메모리에서 자동 해제
-    inputWidget->setWindowTitle("일정 추가");
-    inputWidget->setWindowModality(Qt::ApplicationModal); // 이 창이 떠 있는 동안 메인창 클릭 불가
+    // 2. 레이아웃 설정
+    m_calendarGrid = new QGridLayout(ui->centralwidget);
+    ui->centralwidget->setLayout(m_calendarGrid);
 
-    connect(inputWidget, &ScheduleInputWidget::scheduleSaved, this, &printCurrentDbState);
-    // 3. 화면에 표시
+    // 3. 현재 날짜 기준으로 달력 초기화
+    QDate today = QDate::currentDate();
+    m_currentYear = today.year();
+    m_currentMonth = today.month();
+
+    updateCalendar(m_currentYear, m_currentMonth);
+}
+
+void MainWindow::updateCalendar(int year, int month) {
+    // 기존 그리드 아이템 제거
+    QLayoutItem *item;
+    while ((item = m_calendarGrid->takeAt(0)) != nullptr) {
+        if (item->widget()) {
+            delete item->widget();
+        }
+        delete item;
+    }
+
+    // 해당 월의 일정 가져오기
+    QList<QVariantMap> monthSchedules = DatabaseManager::instance().getSchedulesForMonth(year, month);
+
+    QDate firstDay(year, month, 1);
+    int startCol = firstDay.dayOfWeek() % 7; 
+
+    int daysInMonth = firstDay.daysInMonth();
+
+    for (int day = 1; day <= daysInMonth; ++day) {
+        DayCell* cell = new DayCell(this);
+        QDate date(year, month, day);
+        cell->setDate(date);
+        
+        // 해당 날짜의 일정 필터링
+        QList<QVariantMap> daySchedules;
+        for (const auto& s : monthSchedules) {
+            QDateTime start = QDateTime::fromString(s["start"].toString(), "yyyy-MM-dd HH:mm:ss");
+            if (start.date() == date) {
+                daySchedules.append(s);
+            }
+        }
+        cell->setSchedules(daySchedules);
+        
+        connect(cell, &DayCell::dayDoubleClicked, this, &MainWindow::handleDayDoubleClicked);
+
+        int row = (day + startCol - 1) / 7;
+        int col = (day + startCol - 1) % 7;
+        m_calendarGrid->addWidget(cell, row, col);
+    }
+}
+
+void MainWindow::handleDayDoubleClicked(const QDate& date) {
+    qDebug() << "Day double clicked:" << date.toString();
+    ScheduleInputWidget *inputWidget = new ScheduleInputWidget(date);
+    inputWidget->setAttribute(Qt::WA_DeleteOnClose);
+    inputWidget->setWindowTitle(date.toString("yyyy-MM-dd") + " 일정 추가");
+    inputWidget->setWindowModality(Qt::ApplicationModal);
+    
+    // 일정 저장 시 달력 갱신 (추후 필요시)
+    connect(inputWidget, &ScheduleInputWidget::scheduleSaved, [this]() {
+        this->updateCalendar(m_currentYear, m_currentMonth);
+    });
+    
     inputWidget->show();
 }
 

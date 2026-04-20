@@ -5,7 +5,7 @@
 #include <QFormLayout>
 #include <QMessageBox>
 
-ScheduleInputWidget::ScheduleInputWidget(QWidget *parent) : QWidget(parent) {
+ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *parent) : QWidget(parent) {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     QFormLayout *formLayout = new QFormLayout();
 
@@ -18,10 +18,12 @@ ScheduleInputWidget::ScheduleInputWidget(QWidget *parent) : QWidget(parent) {
     categoryCombo->addItem("Personal", 2);
     categoryCombo->addItem("Other", 3);
 
-    startTimeEdit = new QDateTimeEdit(QDateTime::currentDateTime(), this);
-    startTimeEdit->setCalendarPopup(true); // 달력 팝업 활성화
+    // 전달받은 날짜와 현재 시간을 결합
+    QDateTime startDateTime(initialDate, QTime::currentTime());
+    startTimeEdit = new QDateTimeEdit(startDateTime, this);
+    startTimeEdit->setCalendarPopup(true);
 
-    endTimeEdit = new QDateTimeEdit(QDateTime::currentDateTime().addSecs(3600), this);
+    endTimeEdit = new QDateTimeEdit(startDateTime.addSecs(3600), this);
     endTimeEdit->setCalendarPopup(true);
 
     saveBtn = new QPushButton("Save Schedule", this);
