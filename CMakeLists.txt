@@ -29,6 +29,9 @@ qt_add_executable(13jo-calendar-project
         widgets/DayCell.cpp
         widgets/ScheduleEdit.cpp
         widgets/ScheduleEdit.h
+        models/DatabaseManager.cpp
+        models/DatabaseManager.h
+
 
 
 
