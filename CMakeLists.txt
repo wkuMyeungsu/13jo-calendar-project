@@ -31,6 +31,10 @@ qt_add_executable(13jo-calendar-project
         widgets/MonthWidget.cpp
         widgets/ScheduleEdit.cpp
         widgets/ScheduleEdit.h
+        widgets/ScheduleModifyWidget.cpp
+        widgets/ScheduleModifyWidget.h
+        widgets/ScheduleManagerWidget.cpp
+        widgets/ScheduleManagerWidget.h
         models/DatabaseManager.cpp
         models/DatabaseManager.h
     )

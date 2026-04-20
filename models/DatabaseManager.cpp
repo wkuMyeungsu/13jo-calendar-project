@@ -59,8 +59,9 @@ QList<QVariantMap> DatabaseManager::getSchedulesForMonth(int year, int month) {
         while (query.next()) {
             QVariantMap item;
             item["id"] = query.value("id");
-            item["category_id"] = query.value("category_id"); // 데이터 매핑 추가
+            item["category_id"] = query.value("category_id");
             item["title"] = query.value("title");
+            item["content"] = query.value("content");
             item["start"] = query.value("start_time");
             item["end"] = query.value("end_time");
             item["color"] = query.value("color");
@@ -82,8 +83,9 @@ QList<QVariantMap> DatabaseManager::getSchedulesForDay(const QDate& date) {
         while (query.next()) {
             QVariantMap item;
             item["id"] = query.value("id");
-            item["category_id"] = query.value("category_id"); // 데이터 매핑 추가
+            item["category_id"] = query.value("category_id");
             item["title"] = query.value("title");
+            item["content"] = query.value("content");
             item["start"] = query.value("start_time");
             item["end"] = query.value("end_time");
             item["color"] = query.value("color");

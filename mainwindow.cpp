@@ -3,6 +3,10 @@
 #include "DatabaseManager.h"
 #include "MonthWidget.h"
 #include "ScheduleEdit.h"
+#include "ScheduleManagerWidget.h"
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 #include <QDebug>
 #include <QDate>
 #include <QVBoxLayout>
@@ -63,17 +67,16 @@ void MainWindow::wheelEvent(QWheelEvent* event) {
     if (m_animation->state() == QAbstractAnimation::Running) return;
 
     // 스크롤 감도 조정 및 즉시 반영
-    m_yOffset += event->angleDelta().y() * 0.8; // 감도 약간 하향으로 제어력 향상
+    m_yOffset += event->angleDelta().y() * 0.8; 
     
     int h = ui->centralwidget->height();
     
-    // 한 달 범위를 넘지 않도록 제한 (당기는 느낌의 한계치)
     if (m_yOffset > h) m_yOffset = h;
     if (m_yOffset < -h) m_yOffset = -h;
 
     m_container->move(0, -h + m_yOffset);
 
-    m_scrollTimer->start(150); // 타이머 단축으로 더 빠른 스냅 반응
+    m_scrollTimer->start(150);
     event->accept();
 }
 
@@ -83,13 +86,10 @@ void MainWindow::finishScroll() {
     int targetY = -h;
 
     if (m_yOffset > threshold) {
-        // 이전 달로 확정
         targetY = 0;
     } else if (m_yOffset < -threshold) {
-        // 다음 달로 확정
         targetY = -2 * h;
     } else {
-        // 원래 위치로 복귀
         targetY = -h;
     }
 
@@ -116,9 +116,10 @@ void MainWindow::updateCalendar() {
     setWindowTitle(QString("%1년 %2월").arg(m_currentYear).arg(m_currentMonth));
     
     int h = ui->centralwidget->height();
-    m_container->move(0, -h); // 중앙 배치
+    if (h <= 0) h = 600; // 초기화 전 방어 코드
 
-    // 이전, 현재, 다음 달 날짜 계산
+    m_container->move(0, -h);
+
     QDate current(m_currentYear, m_currentMonth, 1);
     QDate prev = current.addMonths(-1);
     QDate next = current.addMonths(1);
@@ -129,11 +130,17 @@ void MainWindow::updateCalendar() {
 }
 
 void MainWindow::handleDayDoubleClicked(const QDate& date) {
-    ScheduleInputWidget *inputWidget = new ScheduleInputWidget(date);
-    inputWidget->setAttribute(Qt::WA_DeleteOnClose);
-    inputWidget->setWindowModality(Qt::ApplicationModal);
-    connect(inputWidget, &ScheduleInputWidget::scheduleSaved, this, &MainWindow::updateCalendar);
-    inputWidget->show();
+    qDebug() << "Day double clicked:" << date.toString();
+    ScheduleManagerWidget *managerWidget = new ScheduleManagerWidget(date);
+    managerWidget->setAttribute(Qt::WA_DeleteOnClose);
+    managerWidget->setWindowModality(Qt::ApplicationModal);
+    
+    // 일정 저장/수정/삭제 시 달력 갱신 (데이터 변경 시 업데이트)
+    connect(managerWidget, &ScheduleManagerWidget::dataChanged, [this]() {
+        this->updateCalendar();
+    });
+    
+    managerWidget->show();
 }
 
 MainWindow::~MainWindow() {
