@@ -8,6 +8,8 @@
 
 ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWidget *parent) : QWidget(parent) {
     m_scheduleId = scheduleData["id"].toInt();
+    m_selectedColor = scheduleData["color"].toString();
+    if (m_selectedColor.isEmpty()) m_selectedColor = "#4A90E2";
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     QFormLayout *formLayout = new QFormLayout();
@@ -19,9 +21,11 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     categoryCombo->addItem("Work", 1);
     categoryCombo->addItem("Personal", 2);
     categoryCombo->addItem("Other", 3);
-    // 현재 카테고리 설정
     int catIdx = categoryCombo->findData(scheduleData["category_id"]);
     if (catIdx != -1) categoryCombo->setCurrentIndex(catIdx);
+
+    colorBtn = new QPushButton("Pick Color", this);
+    colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold;").arg(m_selectedColor));
 
     allDayCheck = new QCheckBox("All Day", this);
 
@@ -49,6 +53,7 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
 
     formLayout->addRow("Title:", titleInput);
     formLayout->addRow("Category:", categoryCombo);
+    formLayout->addRow("Color:", colorBtn);
     formLayout->addRow("", allDayCheck);
     formLayout->addRow("Start:", startTimeEdit);
     formLayout->addRow("End:", endTimeEdit);
@@ -58,8 +63,17 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     mainLayout->addLayout(btnLayout);
 
     connect(allDayCheck, &QCheckBox::toggled, this, &ScheduleModifyWidget::toggleAllDay);
+    connect(colorBtn, &QPushButton::clicked, this, &ScheduleModifyWidget::selectColor);
     connect(updateBtn, &QPushButton::clicked, this, &ScheduleModifyWidget::handleUpdate);
     connect(deleteBtn, &QPushButton::clicked, this, &ScheduleModifyWidget::handleDelete);
+}
+
+void ScheduleModifyWidget::selectColor() {
+    QColor color = QColorDialog::getColor(QColor(m_selectedColor), this, "Select Schedule Color");
+    if (color.isValid()) {
+        m_selectedColor = color.name();
+        colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold;").arg(m_selectedColor));
+    }
 }
 
 void ScheduleModifyWidget::toggleAllDay(bool checked) {
@@ -87,7 +101,8 @@ void ScheduleModifyWidget::handleUpdate() {
     QDateTime end = endTimeEdit->dateTime();
     QString content = contentInput->toPlainText();
 
-    bool success = DatabaseManager::instance().updateSchedule(m_scheduleId, catId, title, content, start, end, "#4A90E2");
+    // 선택한 m_selectedColor를 DB 업데이트에 반영
+    bool success = DatabaseManager::instance().updateSchedule(m_scheduleId, catId, title, content, start, end, m_selectedColor);
 
     if (success) {
         emit scheduleUpdated();

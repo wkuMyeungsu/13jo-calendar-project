@@ -9,6 +9,7 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QTextEdit>
+#include <QColorDialog>
 
 class ScheduleInputWidget : public QWidget {
     Q_OBJECT
@@ -21,6 +22,7 @@ signals:
 private slots:
     void handleSave();
     void toggleAllDay(bool checked);
+    void selectColor();
 
 private:
     QLineEdit *titleInput;
@@ -29,7 +31,9 @@ private:
     QDateTimeEdit *startTimeEdit;
     QDateTimeEdit *endTimeEdit;
     QTextEdit *contentInput;
+    QPushButton *colorBtn;
     QPushButton *saveBtn;
+    QString m_selectedColor;
 };
 
 

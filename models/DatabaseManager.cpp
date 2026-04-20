@@ -50,10 +50,17 @@ bool DatabaseManager::addSchedule(int categoryId, const QString& title, const QS
 QList<QVariantMap> DatabaseManager::getSchedulesForMonth(int year, int month) {
     QList<QVariantMap> schedules;
     QSqlQuery query;
-    QString datePattern = QString("%1-%2").arg(year).arg(month, 2, 10, QChar('0'));
+    QDate firstDay(year, month, 1);
+    QDate lastDay(year, month, firstDay.daysInMonth());
+    
+    QString startRange = firstDay.toString("yyyy-MM-dd 00:00:00");
+    QString endRange = lastDay.toString("yyyy-MM-dd 23:59:59");
 
-    query.prepare("SELECT * FROM schedules WHERE start_time LIKE :pattern OR end_time LIKE :pattern");
-    query.bindValue(":pattern", datePattern + "%");
+    // 해당 월의 범위와 겹치는 모든 일정 조회
+    // (일정 시작일 <= 월 말일) AND (일정 종료일 >= 월 시작일)
+    query.prepare("SELECT * FROM schedules WHERE start_time <= :endRange AND end_time >= :startRange ORDER BY start_time ASC");
+    query.bindValue(":startRange", startRange);
+    query.bindValue(":endRange", endRange);
 
     if (query.exec()) {
         while (query.next()) {
@@ -74,10 +81,13 @@ QList<QVariantMap> DatabaseManager::getSchedulesForMonth(int year, int month) {
 QList<QVariantMap> DatabaseManager::getSchedulesForDay(const QDate& date) {
     QList<QVariantMap> schedules;
     QSqlQuery query;
-    QString dateStr = date.toString("yyyy-MM-dd");
+    QString dateStart = date.toString("yyyy-MM-dd 00:00:00");
+    QString dateEnd = date.toString("yyyy-MM-dd 23:59:59");
 
-    query.prepare("SELECT * FROM schedules WHERE start_time LIKE :date ORDER BY start_time ASC");
-    query.bindValue(":date", dateStr + "%");
+    // 해당 날짜를 포함하는(겹치는) 모든 일정 조회
+    query.prepare("SELECT * FROM schedules WHERE start_time <= :dateEnd AND end_time >= :dateStart ORDER BY start_time ASC");
+    query.bindValue(":dateStart", dateStart);
+    query.bindValue(":dateEnd", dateEnd);
 
     if (query.exec()) {
         while (query.next()) {

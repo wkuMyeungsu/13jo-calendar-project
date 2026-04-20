@@ -18,6 +18,10 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     categoryCombo->addItem("Personal", 2);
     categoryCombo->addItem("Other", 3);
 
+    m_selectedColor = "#4A90E2"; // 기본 색상
+    colorBtn = new QPushButton("Pick Color", this);
+    colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold;").arg(m_selectedColor));
+
     allDayCheck = new QCheckBox("All Day", this);
 
     // 전달받은 날짜와 현재 시간을 결합
@@ -33,11 +37,12 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     contentInput->setMaximumHeight(100);
 
     saveBtn = new QPushButton("Save Schedule", this);
-    saveBtn->setStyleSheet("background-color: #4A90E2; color: white; font-weight: bold; padding: 5px;");
+    saveBtn->setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; padding: 5px;");
 
     // 폼 레이아웃 배치
     formLayout->addRow("Title:", titleInput);
     formLayout->addRow("Category:", categoryCombo);
+    formLayout->addRow("Color:", colorBtn);
     formLayout->addRow("", allDayCheck);
     formLayout->addRow("Start:", startTimeEdit);
     formLayout->addRow("End:", endTimeEdit);
@@ -47,7 +52,16 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     mainLayout->addWidget(saveBtn);
 
     connect(allDayCheck, &QCheckBox::toggled, this, &ScheduleInputWidget::toggleAllDay);
+    connect(colorBtn, &QPushButton::clicked, this, &ScheduleInputWidget::selectColor);
     connect(saveBtn, &QPushButton::clicked, this, &ScheduleInputWidget::handleSave);
+}
+
+void ScheduleInputWidget::selectColor() {
+    QColor color = QColorDialog::getColor(QColor(m_selectedColor), this, "Select Schedule Color");
+    if (color.isValid()) {
+        m_selectedColor = color.name();
+        colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold;").arg(m_selectedColor));
+    }
 }
 
 void ScheduleInputWidget::toggleAllDay(bool checked) {
@@ -77,13 +91,14 @@ void ScheduleInputWidget::handleSave() {
     QDateTime end = endTimeEdit->dateTime();
     QString content = contentInput->toPlainText();
 
-    // DB 저장 호출 (컬러는 카테고리에 따라 분기 가능하나 일단 기본색)
-    bool success = DatabaseManager::instance().addSchedule(catId, title, content, start, end, "#4A90E2");
+    // DB 저장 호출 (선택한 색상 반영)
+    bool success = DatabaseManager::instance().addSchedule(catId, title, content, start, end, m_selectedColor);
 
     if (success) {
         titleInput->clear();
         contentInput->clear();
         emit scheduleSaved(); // 신호 발생
         qDebug() << "Schedule saved successfully.";
+        this->close();
     }
 }

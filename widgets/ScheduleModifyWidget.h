@@ -10,6 +10,7 @@
 #include <QCheckBox>
 #include <QTextEdit>
 #include <QVariantMap>
+#include <QColorDialog>
 
 class ScheduleModifyWidget : public QWidget {
     Q_OBJECT
@@ -24,6 +25,7 @@ private slots:
     void handleUpdate();
     void handleDelete();
     void toggleAllDay(bool checked);
+    void selectColor();
 
 private:
     int m_scheduleId;
@@ -33,8 +35,10 @@ private:
     QDateTimeEdit *startTimeEdit;
     QDateTimeEdit *endTimeEdit;
     QTextEdit *contentInput;
+    QPushButton *colorBtn;
     QPushButton *updateBtn;
     QPushButton *deleteBtn;
+    QString m_selectedColor;
 };
 
 #endif // SCHEDULEMODIFYWIDGET_H
