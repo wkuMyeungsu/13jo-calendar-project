@@ -3,6 +3,7 @@
 #include "DatabaseManager.h"
 #include "DayCell.h"
 #include "ScheduleEdit.h"
+#include "ScheduleManagerWidget.h"
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -97,17 +98,16 @@ void MainWindow::updateCalendar(int year, int month) {
 
 void MainWindow::handleDayDoubleClicked(const QDate& date) {
     qDebug() << "Day double clicked:" << date.toString();
-    ScheduleInputWidget *inputWidget = new ScheduleInputWidget(date);
-    inputWidget->setAttribute(Qt::WA_DeleteOnClose);
-    inputWidget->setWindowTitle(date.toString("yyyy-MM-dd") + " 일정 추가");
-    inputWidget->setWindowModality(Qt::ApplicationModal);
+    ScheduleManagerWidget *managerWidget = new ScheduleManagerWidget(date);
+    managerWidget->setAttribute(Qt::WA_DeleteOnClose);
+    managerWidget->setWindowModality(Qt::ApplicationModal);
     
-    // 일정 저장 시 달력 갱신 (추후 필요시)
-    connect(inputWidget, &ScheduleInputWidget::scheduleSaved, [this]() {
+    // 일정 저장/수정/삭제 시 달력 갱신
+    connect(managerWidget, &ScheduleManagerWidget::dataChanged, [this]() {
         this->updateCalendar(m_currentYear, m_currentMonth);
     });
     
-    inputWidget->show();
+    managerWidget->show();
 }
 
 MainWindow::~MainWindow()

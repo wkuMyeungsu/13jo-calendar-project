@@ -29,12 +29,12 @@ qt_add_executable(13jo-calendar-project
         widgets/DayCell.cpp
         widgets/ScheduleEdit.cpp
         widgets/ScheduleEdit.h
+        widgets/ScheduleModifyWidget.cpp
+        widgets/ScheduleModifyWidget.h
+        widgets/ScheduleManagerWidget.cpp
+        widgets/ScheduleManagerWidget.h
         models/DatabaseManager.cpp
         models/DatabaseManager.h
-
-
-
-
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET 13jo-calendar-project APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
