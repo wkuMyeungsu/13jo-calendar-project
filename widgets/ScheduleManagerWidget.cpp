@@ -45,36 +45,11 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     QPushButton *addBtn = new QPushButton("+ 새 일정 추가", this);
     addBtn->setCursor(Qt::PointingHandCursor);
     addBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
-
-    QPushButton *settingsBtn = new QPushButton("⚙ 설정", this);
-    settingsBtn->setCursor(Qt::PointingHandCursor);
-    settingsBtn->setFixedWidth(100);
-    settingsBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
-
-    QHBoxLayout *bottomLayout = new QHBoxLayout();
-    bottomLayout->addWidget(addBtn, 1);
-    bottomLayout->addWidget(settingsBtn);
-    mainLayout->addLayout(bottomLayout);
+    mainLayout->addWidget(addBtn);
 
     connect(addBtn, &QPushButton::clicked, this, &ScheduleManagerWidget::openAddWidget);
-    connect(settingsBtn, &QPushButton::clicked, this, &ScheduleManagerWidget::openSettingsWidget);
 
     refreshList();
-}
-
-void ScheduleManagerWidget::openSettingsWidget() {
-    SettingsWidget *settings = new SettingsWidget();
-    settings->setAttribute(Qt::WA_DeleteOnClose);
-    settings->setWindowModality(Qt::ApplicationModal);
-    
-    // 설정이 변경되면 현재 매니저 위젯도 새로고침하여 스타일 반영 확인
-    connect(settings, &SettingsWidget::settingsChanged, this, [this]() {
-        this->setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
-        this->m_titleLabel->setStyleSheet(StyleHelper::getHeaderStyle());
-        refreshList();
-    });
-    
-    settings->show();
 }
 
 void ScheduleManagerWidget::refreshList() {

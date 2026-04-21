@@ -25,7 +25,6 @@ private slots:
     void refreshList();
     void openAddWidget();
     void openEditWidget(const QVariantMap& data);
-    void openSettingsWidget(); // 설정 창 열기 (임시 디버깅용)
 
 private:
     QDate m_date;

@@ -32,9 +32,12 @@ protected:
 
 public slots:
     void updateCalendar();
-    void updateCategoryBar(); // 카테고리 버튼 바 생성/갱신
-    void openCategoryManager(); // 카테고리 편집기 열기
-    void toggleOverflow();    // 확장 영역 토글
+    void updateCategoryBar(); 
+    void openCategoryManager(); 
+    void toggleOverflow();    
+    void setMiniMode(bool mini);
+    void togglePinned();        
+    void openSettingsWidget();
 
 private slots:
     void handleDayDoubleClicked(const QDate& date);
@@ -46,31 +49,27 @@ private slots:
     void slideMonth(int direction);
 
 private:
-    void updateLayoutPositions(); // 위젯들의 위치와 크기를 통합 관리
+    void updateLayoutPositions(); 
 
     static constexpr int kBaseHeaderH = 52;
     int m_currentHeaderH;
 
     Ui::MainWindow *ui;
 
-    // 네비게이션 헤더
     QWidget*     m_headerBar;
     QLabel*      m_monthLabel;
     QPushButton* m_prevBtn;
     QPushButton* m_nextBtn;
     QPushButton* m_todayBtn;
     
-    // 카테고리 필터링
     QHBoxLayout* m_categoryLayout;
     QMap<int, bool> m_categoryFilters;
 
-    // 확장 영역 (카테고리 4개 이상일 때)
     QWidget*      m_overflowWidget;
     QGridLayout*  m_overflowLayout;
     QPushButton*  m_moreBtn;
     bool          m_isExpanded;
 
-    // 캘린더 컨테이너
     QWidget* m_container;
     MonthWidget* m_months[3];
 
@@ -79,5 +78,15 @@ private:
     int m_xOffset;
     QTimer* m_scrollTimer;
     QPropertyAnimation* m_animation;
+
+    // 미니 모드 관련
+    bool     m_isMiniMode;
+    bool     m_isPinned;
+    QWidget* m_miniWidget;
+    QLabel*  m_miniDateLabel;
+    QLabel*  m_miniTimeLabel;
+    QPushButton* m_pinBtn;
+    QVBoxLayout* m_miniScheduleLayout;
+    QTimer*  m_realTimeTimer;
 };
 #endif // MAINWINDOW_H
