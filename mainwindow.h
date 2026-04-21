@@ -32,6 +32,7 @@ protected:
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     void changeEvent(QEvent* event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 public slots:
     void updateCalendar();
@@ -97,5 +98,6 @@ private:
     QPushButton* m_pinBtn;
     QVBoxLayout* m_miniScheduleLayout;
     QTimer*  m_realTimeTimer;
+    QMap<QObject*, QVariantMap> m_miniItemDataMap; // 미니 모드 항목 매핑용
 };
 #endif // MAINWINDOW_H

@@ -5,6 +5,7 @@
 #include "ScheduleEdit.h"
 #include "ScheduleManagerWidget.h"
 #include "CategoryModifyWidget.h"
+#include "ScheduleModifyWidget.h"
 #include "SettingsWidget.h"
 
 /*** 메인윈도우 ***/
@@ -256,17 +257,20 @@ void MainWindow::setMiniMode(bool mini) {
 
     if (m_isMiniMode) {
         updateMiniModeStyle();
-
         m_headerBar->hide(); m_overflowWidget->hide(); m_container->hide();
         m_miniWidget->show();
+
+        // 타이틀바 및 미니 위젯 레이아웃
         int w = ui->centralwidget->width();
         int h = ui->centralwidget->height();
         m_titleBar->setGeometry(0, 0, w, kTitleBarH);
         m_miniWidget->setGeometry(0, kTitleBarH, w, h - kTitleBarH);
-
+        
         QDate today = QDate::currentDate();
         m_miniDateLabel->setText(today.toString("yyyy년 MM월 dd일 dddd"));
+        m_miniTimeLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
         
+        m_miniItemDataMap.clear();
         QLayoutItem *item;
         while ((item = m_miniScheduleLayout->takeAt(0)) != nullptr) {
             if (item->widget()) item->widget()->deleteLater();
@@ -274,7 +278,6 @@ void MainWindow::setMiniMode(bool mini) {
         }
 
         auto schedules = DatabaseManager::instance().getSchedulesForDay(today);
-        
         if (schedules.isEmpty()) {
             QLabel* empty = new QLabel("오늘 일정이 없습니다.", m_miniWidget);
             empty->setStyleSheet(QString("color: #999; font-style: italic; padding: 20px; background: transparent;"));
@@ -284,21 +287,35 @@ void MainWindow::setMiniMode(bool mini) {
             for (const auto& s : schedules) {
                 QWidget* itemWidget = new QWidget(m_miniWidget);
                 itemWidget->setObjectName("itemWidget");
-                itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString()));
-                QHBoxLayout* itemLayout = new QHBoxLayout(itemWidget);
+                itemWidget->setCursor(Qt::PointingHandCursor);
+                itemWidget->setAttribute(Qt::WA_Hover);
+                itemWidget->installEventFilter(this);
 
-                itemLayout->setContentsMargins(15, 12, 15, 12); itemLayout->setSpacing(10);
+                QString colorStr = s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString();
+                itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
+
+                QHBoxLayout* itemLayout = new QHBoxLayout(itemWidget);
+                itemLayout->setContentsMargins(15, 12, 15, 12);
+                itemLayout->setSpacing(10);
+
                 QLabel* titleLabel = new QLabel(s["title"].toString(), itemWidget);
                 titleLabel->setStyleSheet(QString("font-weight: bold; font-size: 13px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
                 itemLayout->addWidget(titleLabel, 1);
+
                 QString startStr = s["start"].toString().mid(11, 5);
                 QString endStr = s["end"].toString().mid(11, 5);
+                bool isAllDay = (s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00");
 
-                if (!((s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00"))) {
+                if (!isAllDay) {
                     QLabel* timeLabel = new QLabel(QString("%1~%2").arg(startStr, endStr), itemWidget);
                     timeLabel->setStyleSheet(QString("color: #888; font-size: 11px; border: none; background: transparent;"));
+                    timeLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
                     itemLayout->addWidget(timeLabel);
+                } else {
+                    itemLayout->addStretch(0);
                 }
+                
+                m_miniItemDataMap[itemWidget] = s;
                 m_miniScheduleLayout->addWidget(itemWidget);
             }
         }
@@ -307,6 +324,36 @@ void MainWindow::setMiniMode(bool mini) {
         updateMainStyle();
         updateLayoutPositions();
     }
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+    QWidget *widget = qobject_cast<QWidget*>(obj);
+    if (!widget || !m_miniItemDataMap.contains(widget)) return QMainWindow::eventFilter(obj, event);
+
+    QString colorStr = m_miniItemDataMap[widget]["color"].toString();
+    if (colorStr.isEmpty()) colorStr = StyleHelper::getPrimaryColor();
+
+    if (event->type() == QEvent::MouseButtonPress) {
+        ScheduleModifyWidget *modifyWidget = new ScheduleModifyWidget(m_miniItemDataMap[widget]);
+        modifyWidget->setAttribute(Qt::WA_DeleteOnClose);
+        modifyWidget->setWindowModality(Qt::ApplicationModal);
+        connect(modifyWidget, &ScheduleModifyWidget::scheduleUpdated, this, &MainWindow::updateCalendar);
+        connect(modifyWidget, &ScheduleModifyWidget::scheduleDeleted, this, &MainWindow::updateCalendar);
+        modifyWidget->show();
+        return true;
+    } 
+    else if (event->type() == QEvent::HoverEnter) {
+        widget->setStyleSheet(StyleHelper::getItemHoverStyle(colorStr));
+        QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(widget);
+        shadow->setBlurRadius(15); shadow->setYOffset(4); shadow->setColor(QColor(0, 0, 0, 40));
+        widget->setGraphicsEffect(shadow);
+    } 
+    else if (event->type() == QEvent::HoverLeave) {
+        widget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
+        widget->setGraphicsEffect(nullptr);
+    }
+
+    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::openSettingsWidget() {
