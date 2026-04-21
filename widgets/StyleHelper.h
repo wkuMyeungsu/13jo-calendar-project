@@ -147,7 +147,7 @@ namespace StyleHelper {
 
     inline QString getItemHoverStyle(const QString& catColor) {
         QString bg = (currentTheme == Theme::DeepBlue ? "#F1F6FF" : "#F5F9FF");
-        return QString("#itemWidget { background-color: %1; border-left: 5px solid %2; border-top: 1px solid %3; border-right: 1px solid %3; border-bottom: 1px solid %3; }").arg(bg, catColor, getPrimaryColor());
+        return QString("#itemWidget { background-color: %1; border-left: 5px solid %2; border-radius: 6px; border-top: 1px solid %3; border-right: 1px solid %3; border-bottom: 1px solid %3; }").arg(bg, catColor, getPrimaryColor());
     }
 }
 
