@@ -1,4 +1,5 @@
 #include "CategoryModifyWidget.h"
+#include "StyleHelper.h"
 #include "../models/DatabaseManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -9,41 +10,30 @@
 
 CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m_currentEditingId(-1) {
     setWindowTitle("카테고리 설정");
-    setFixedSize(400, 550);
+    setFixedSize(StyleHelper::WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
     setStyleSheet("background-color: white;");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(15);
+    mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
+    mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
 
     // 1. 상단 제목
     QLabel *headerLabel = new QLabel("카테고리 관리", this);
-    headerLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px;");
+    headerLabel->setStyleSheet(StyleHelper::HEADER_STYLE);
     mainLayout->addWidget(headerLabel);
 
     // 2. 카테고리 목록 섹션
     QLabel *listLabel = new QLabel("현재 카테고리 (클릭 시 수정)", this);
-    listLabel->setStyleSheet("color: #666; font-weight: bold; font-size: 13px;");
+    listLabel->setStyleSheet(StyleHelper::FORM_LABEL_STYLE);
     mainLayout->addWidget(listLabel);
 
     m_listWidget = new QListWidget(this);
     m_listWidget->setSpacing(8);
-    m_listWidget->setStyleSheet(
-        "QListWidget { border: 1px solid #EEE; border-radius: 8px; background: #FAFAFA; padding: 5px; }"
-        "QListWidget::item { background: white; border: 1px solid #EEE; border-radius: 6px; padding: 10px; margin-bottom: 2px; }"
-        "QListWidget::item:selected { background: #F0F7FF; border: 1px solid #4A90E2; color: #333; }"
-        "QListWidget::item:hover { background: #F5F9FF; border: 1px solid #D0E5FF; }"
-        "QScrollBar:vertical { border: none; background: transparent; width: 8px; margin: 0px; }"
-        "QScrollBar::handle:vertical { background: #E0E0E0; min-height: 20px; border-radius: 4px; }"
-        "QScrollBar::handle:vertical:hover { background: #BDBDBD; }"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }"
-    );
+    m_listWidget->setStyleSheet(StyleHelper::LIST_WIDGET_STYLE);
     mainLayout->addWidget(m_listWidget);
 
     // 3. 입력 필드 섹션
-    QString inputStyle = 
-        "QLineEdit { border: 1px solid #DDD; border-radius: 6px; padding: 8px; background: #FDFDFD; color: #333; }"
-        "QLineEdit:focus { border: 1px solid #4A90E2; background: white; }";
+    QString inputStyle = StyleHelper::COMMON_INPUT_STYLE;
 
     QHBoxLayout *editLayout = new QHBoxLayout();
     editLayout->setSpacing(10);
@@ -68,27 +58,16 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
 
     m_addBtn = new QPushButton("신규 추가", this);
     m_addBtn->setCursor(Qt::PointingHandCursor);
-    m_addBtn->setStyleSheet(
-        "QPushButton { background-color: #4CAF50; color: white; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: none; }"
-        "QPushButton:hover { background-color: #45a049; }"
-    );
+    m_addBtn->setStyleSheet(StyleHelper::BTN_SAVE_STYLE);
     
     m_editBtn = new QPushButton("변경 저장", this);
     m_editBtn->setCursor(Qt::PointingHandCursor);
-    m_editBtn->setStyleSheet(
-        "QPushButton { background-color: #4A90E2; color: white; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: none; }"
-        "QPushButton:hover { background-color: #357ABD; }"
-        "QPushButton:disabled { background-color: #E0E0E0; color: #AAA; }"
-    );
+    m_editBtn->setStyleSheet(StyleHelper::BTN_MODIFY_STYLE);
     m_editBtn->setEnabled(false);
 
     m_deleteBtn = new QPushButton("삭제", this);
     m_deleteBtn->setCursor(Qt::PointingHandCursor);
-    m_deleteBtn->setStyleSheet(
-        "QPushButton { background-color: #F8D7DA; color: #721C24; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: 1px solid #F5C6CB; }"
-        "QPushButton:hover { background-color: #E24A4A; color: white; border-color: #E24A4A; }"
-        "QPushButton:disabled { background-color: #F9F9F9; color: #DDD; border-color: #EEE; }"
-    );
+    m_deleteBtn->setStyleSheet(StyleHelper::BTN_DELETE_STYLE);
     m_deleteBtn->setEnabled(false);
 
     btnLayout->addWidget(m_addBtn);
