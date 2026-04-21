@@ -18,6 +18,9 @@ public:
 signals:
     void dataChanged();
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 private slots:
     void refreshList();
     void openAddWidget();
@@ -27,6 +30,7 @@ private:
     QDate m_date;
     QVBoxLayout *m_listLayout;
     QLabel *m_titleLabel;
+    QMap<QObject*, QVariantMap> m_itemDataMap; // 위젯과 데이터 매핑용
 };
 
 #endif // SCHEDULEMANAGERWIDGET_H
