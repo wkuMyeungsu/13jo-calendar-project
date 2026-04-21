@@ -39,3 +39,6 @@ CLAUDE.md
 .gemini/
 GEMINI.md
 problems/
+.docs/
+
+.claude/

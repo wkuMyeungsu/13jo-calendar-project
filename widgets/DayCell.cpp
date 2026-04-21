@@ -128,29 +128,34 @@ static QLabel* createScheduleBar(const Schedule& data, const QDate& cellDate, co
     bool isStartDay  = (startD == cellDate);
     bool isEndDay    = (endD   == cellDate);
     bool isMultiDay  = (startD != endD);
+    bool isBarType   = isMultiDay || data.isAllDay; // 멀티데이거나 하루 종일인 경우 바 형태로 표시
 
     if (isStartDay || cellDate.dayOfWeek() == 7 || cellDate.day() == 1)
         label->setText(" " + data.title);
 
     QColor baseColor(data.color);
-    if (isMultiDay) {
-        QString lr = isStartDay ? "4px" : "0px", rr = isEndDay ? "4px" : "0px";
-        QString borderLeft = isStartDay ? QString("3px solid %1").arg(baseColor.name()) : "none";
+    if (isBarType) {
+        QString lr = (isStartDay || data.isAllDay) ? "4px" : "0px";
+        QString rr = (isEndDay || data.isAllDay) ? "4px" : "0px";
+        QString borderLeft = (isStartDay || data.isAllDay) ? QString("3px solid %1").arg(baseColor.name()) : "none";
+        
         label->setStyleSheet(QString(
             "background-color: rgba(%1, %2, %3, 50); color: #333; border-left: %4; "
             "border-top-left-radius: %5; border-bottom-left-radius: %5; "
             "border-top-right-radius: %6; border-bottom-right-radius: %6; "
-            "font-size: %7px; font-weight: bold; margin: 1px 0px;")
+            "font-size: %7px; font-weight: bold; margin: 1px %8px;")
             .arg(baseColor.red()).arg(baseColor.green()).arg(baseColor.blue())
-            .arg(borderLeft).arg(lr).arg(rr).arg(stage.fontSize));
+            .arg(borderLeft).arg(lr).arg(rr).arg(stage.fontSize)
+            .arg(data.isAllDay && !isMultiDay ? 4 : 0)); // 단일 날짜 하루종일 바는 좌우 여백 살짝 부여
     } else {
         label->setText(" •" + label->text());
         label->setStyleSheet(QString(
             "background-color: transparent; color: %1; font-size: %2px; font-weight: bold; margin: 1px 0px;")
             .arg(baseColor.name()).arg(stage.fontSize));
     }
-    label->setToolTip(QString("%1\n%2 ~ %3")
-        .arg(data.title, data.start.toString("MM/dd HH:mm"), data.end.toString("MM/dd HH:mm")));
+    
+    QString timeInfo = data.isAllDay ? "하루 종일" : QString("%1 ~ %2").arg(data.start.toString("HH:mm"), data.end.toString("HH:mm"));
+    label->setToolTip(QString("%1\n%2").arg(data.title, timeInfo));
     return label;
 }
 

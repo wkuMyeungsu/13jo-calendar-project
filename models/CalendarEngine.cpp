@@ -54,10 +54,10 @@ CalendarEngine::computeLayout(int year, int month, const QList<Schedule>& schedu
 
         const int totalSlots = slotOccupied.size();
 
-        // 멀티데이 바(bar)가 차지하는 슬롯 인덱스 기록 (BarSpacer 삽입 기준)
+        // 멀티데이 바(bar) 또는 하루 종일(isAllDay) 일정이 차지하는 슬롯 인덱스 기록
         QSet<int> barSlotIndices;
         for (const auto& ass : weekAssignments) {
-            if (ass.first.start.date() != ass.first.end.date())
+            if (ass.first.start.date() != ass.first.end.date() || ass.first.isAllDay)
                 barSlotIndices.insert(ass.second);
         }
 

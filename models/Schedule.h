@@ -10,4 +10,5 @@ struct Schedule {
     QDateTime start;
     QDateTime end;
     QString   color;
+    bool      isAllDay   = false; // [Added] 하루 종일 여부 플래그
 };

@@ -21,7 +21,7 @@ public:
 
     // CRUD: Create
     bool addSchedule(int categoryId, const QString& title, const QString& content,
-                     const QDateTime& start, const QDateTime& end, const QString& color);
+                     const QDateTime& start, const QDateTime& end, const QString& color, bool isAllDay = false);
 
     // CRUD: Read
     QList<Schedule>  getSchedulesForMonth(int year, int month);
@@ -29,7 +29,7 @@ public:
 
     // CRUD: Update
     bool updateSchedule(int id, int categoryId, const QString& title, const QString& content,
-                        const QDateTime& start, const QDateTime& end, const QString& color);
+                        const QDateTime& start, const QDateTime& end, const QString& color, bool isAllDay = false);
 
     // CRUD: Delete
     bool deleteSchedule(int id);

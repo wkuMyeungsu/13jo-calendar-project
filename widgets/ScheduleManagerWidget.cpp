@@ -115,8 +115,7 @@ void ScheduleManagerWidget::refreshList() {
 
         QString startStr = s.start.toString("HH:mm");
         QString endStr   = s.end.toString("HH:mm");
-        bool isAllDay    = (startStr == "00:00" && endStr == "00:00");
-        QString timeStr  = isAllDay ? "하루 종일" : QString("%1 ~ %2").arg(startStr, endStr);
+        QString timeStr  = s.isAllDay ? "하루 종일" : QString("%1 ~ %2").arg(startStr, endStr);
         QLabel *time = new QLabel(timeStr, itemWidget);
         time->setStyleSheet(QString("color: %1; font-size: 12px; border: none; background: transparent;").arg(UiConstants::COLOR_TEXT_DIM));
 

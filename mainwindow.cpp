@@ -303,15 +303,17 @@ void MainWindow::setMiniMode(bool mini) {
 
                 QString startStr = s.start.toString("HH:mm");
                 QString endStr   = s.end.toString("HH:mm");
-                bool isAllDay    = (startStr == "00:00" && endStr == "00:00");
 
-                if (!isAllDay) {
+                if (!s.isAllDay) {
                     QLabel* timeLabel = new QLabel(QString("%1~%2").arg(startStr, endStr), itemWidget);
                     timeLabel->setStyleSheet(QString("color: #888; font-size: 11px; border: none; background: transparent;"));
                     timeLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
                     itemLayout->addWidget(timeLabel);
                 } else {
-                    itemLayout->addStretch(0);
+                    QLabel* allDayLabel = new QLabel("하루 종일", itemWidget);
+                    allDayLabel->setStyleSheet(QString("color: %1; font-size: 11px; font-weight: bold; border: none; background: transparent;").arg(StyleHelper::getPrimaryColor()));
+                    allDayLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                    itemLayout->addWidget(allDayLabel);
                 }
 
                 m_miniItemDataMap[itemWidget] = s;

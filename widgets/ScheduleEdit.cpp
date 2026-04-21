@@ -163,10 +163,9 @@ void ScheduleEditDialog::setupMode(Mode mode, const Schedule& data) {
         deleteBtn->show();
     }
     
-    // 하루 종일 여부 체크 (00:00 ~ 00:00 인 경우)
-    bool isAllDay = (data.start.time() == QTime(0, 0) && data.end.time() == QTime(0, 0));
-    allDayCheck->setChecked(isAllDay);
-    toggleAllDay(isAllDay);
+    // 하루 종일 여부 체크 (isAllDay 플래그 사용)
+    allDayCheck->setChecked(data.isAllDay);
+    toggleAllDay(data.isAllDay);
 }
 
 void ScheduleEditDialog::resizeEvent(QResizeEvent* event) {
@@ -201,14 +200,16 @@ void ScheduleEditDialog::handleSave() {
     if (title.isEmpty()) return;
 
     bool success = false;
+    bool isAllDay = allDayCheck->isChecked();
+
     if (m_mode == Mode::Add) {
         success = DatabaseManager::instance().addSchedule(
             categoryCombo->currentData().toInt(), title, contentInput->toPlainText(),
-            startTimeEdit->dateTime(), endTimeEdit->dateTime(), m_selectedColor);
+            startTimeEdit->dateTime(), endTimeEdit->dateTime(), m_selectedColor, isAllDay);
     } else {
         success = DatabaseManager::instance().updateSchedule(
             m_scheduleId, categoryCombo->currentData().toInt(), title, contentInput->toPlainText(),
-            startTimeEdit->dateTime(), endTimeEdit->dateTime(), m_selectedColor);
+            startTimeEdit->dateTime(), endTimeEdit->dateTime(), m_selectedColor, isAllDay);
     }
 
     if (success) {

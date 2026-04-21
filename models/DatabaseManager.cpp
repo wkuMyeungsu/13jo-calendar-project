@@ -29,10 +29,24 @@ bool DatabaseManager::initDatabase(const QString& dbName) {
         "content TEXT, "
         "start_time TEXT NOT NULL, "
         "end_time TEXT NOT NULL, "
-        "color TEXT"
+        "color TEXT, "
+        "is_all_day INTEGER DEFAULT 0"
         ")";
 
     if (!query.exec(createSchedulesTable)) return false;
+
+    // 마이그레이션: 기존 테이블에 is_all_day 컬럼이 없으면 추가
+    QSqlQuery checkQuery("PRAGMA table_info(schedules)");
+    bool columnExists = false;
+    while (checkQuery.next()) {
+        if (checkQuery.value("name").toString() == "is_all_day") {
+            columnExists = true;
+            break;
+        }
+    }
+    if (!columnExists) {
+        query.exec("ALTER TABLE schedules ADD COLUMN is_all_day INTEGER DEFAULT 0");
+    }
 
     QString createCategoriesTable =
         "CREATE TABLE IF NOT EXISTS categories ("
@@ -55,10 +69,10 @@ bool DatabaseManager::initDatabase(const QString& dbName) {
 }
 
 bool DatabaseManager::addSchedule(int categoryId, const QString& title, const QString& content,
-                                  const QDateTime& start, const QDateTime& end, const QString& color) {
+                                  const QDateTime& start, const QDateTime& end, const QString& color, bool isAllDay) {
     QSqlQuery query;
-    query.prepare("INSERT INTO schedules (category_id, title, content, start_time, end_time, color) "
-                  "VALUES (:cat_id, :title, :content, :start, :end, :color)");
+    query.prepare("INSERT INTO schedules (category_id, title, content, start_time, end_time, color, is_all_day) "
+                  "VALUES (:cat_id, :title, :content, :start, :end, :color, :is_all_day)");
 
     query.bindValue(":cat_id", categoryId);
     query.bindValue(":title", title);
@@ -66,6 +80,7 @@ bool DatabaseManager::addSchedule(int categoryId, const QString& title, const QS
     query.bindValue(":start", start.toString(DATE_FORMAT));
     query.bindValue(":end", end.toString(DATE_FORMAT));
     query.bindValue(":color", color);
+    query.bindValue(":is_all_day", isAllDay ? 1 : 0);
 
     return query.exec();
 }
@@ -93,6 +108,7 @@ QList<Schedule> DatabaseManager::getSchedulesForMonth(int year, int month) {
             item.start      = QDateTime::fromString(query.value("start_time").toString(), DATE_FORMAT);
             item.end        = QDateTime::fromString(query.value("end_time").toString(),   DATE_FORMAT);
             item.color      = query.value("color").toString();
+            item.isAllDay   = query.value("is_all_day").toInt() == 1;
             schedules.append(item);
         }
     }
@@ -119,6 +135,7 @@ QList<Schedule> DatabaseManager::getSchedulesForDay(const QDate& date) {
             item.start      = QDateTime::fromString(query.value("start_time").toString(), DATE_FORMAT);
             item.end        = QDateTime::fromString(query.value("end_time").toString(),   DATE_FORMAT);
             item.color      = query.value("color").toString();
+            item.isAllDay   = query.value("is_all_day").toInt() == 1;
             schedules.append(item);
         }
     }
@@ -126,10 +143,10 @@ QList<Schedule> DatabaseManager::getSchedulesForDay(const QDate& date) {
 }
 
 bool DatabaseManager::updateSchedule(int id, int categoryId, const QString& title, const QString& content,
-                                     const QDateTime& start, const QDateTime& end, const QString& color) {
+                                     const QDateTime& start, const QDateTime& end, const QString& color, bool isAllDay) {
     QSqlQuery query;
     query.prepare("UPDATE schedules SET category_id = :cat_id, title = :title, content = :content, "
-                  "start_time = :start, end_time = :end, color = :color "
+                  "start_time = :start, end_time = :end, color = :color, is_all_day = :is_all_day "
                   "WHERE id = :id");
 
     query.bindValue(":cat_id", categoryId);
@@ -138,6 +155,7 @@ bool DatabaseManager::updateSchedule(int id, int categoryId, const QString& titl
     query.bindValue(":start", start.toString(DATE_FORMAT));
     query.bindValue(":end", end.toString(DATE_FORMAT));
     query.bindValue(":color", color);
+    query.bindValue(":is_all_day", isAllDay ? 1 : 0);
     query.bindValue(":id", id);
 
     return query.exec();
