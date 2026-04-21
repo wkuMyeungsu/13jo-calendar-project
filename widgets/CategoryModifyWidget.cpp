@@ -1,12 +1,6 @@
 #include "CategoryModifyWidget.h"
-#include "StyleHelper.h"
-#include "../models/DatabaseManager.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
+#include "UiCommon.h"
 #include "ColorPickerPopup.h"
-#include <QMessageBox>
-#include <QVariantMap>
 
 CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m_currentEditingId(-1) {
     setWindowTitle("카테고리 설정");

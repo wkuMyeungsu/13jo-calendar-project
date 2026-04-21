@@ -1,7 +1,5 @@
 #include "ColorPickerPopup.h"
-#include "StyleHelper.h"
-#include <QGraphicsDropShadowEffect>
-#include <QVBoxLayout>
+#include "UiCommon.h"
 
 ColorPickerPopup::ColorPickerPopup(QWidget *parent) : QWidget(parent) {
     // 팝업 설정: 테두리 없음, 항상 위, 배경 투명 (라운드 처리를 위함)

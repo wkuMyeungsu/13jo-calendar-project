@@ -1,12 +1,5 @@
 #include "ScheduleModifyWidget.h"
-#include "StyleHelper.h"
-#include "../models/DatabaseManager.h"
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include <QHBoxLayout>
-#include <QMessageBox>
-#include <QDebug>
-#include <QLabel>
+#include "UiCommon.h"
 #include "ColorPickerPopup.h"
 
 // 리팩토링: 상수 정의

@@ -1,17 +1,8 @@
 #include "ScheduleManagerWidget.h"
+#include "UiCommon.h"
 #include "ScheduleEdit.h"
 #include "ScheduleModifyWidget.h"
 #include "SettingsWidget.h"
-#include "StyleHelper.h"
-#include "../models/DatabaseManager.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QScrollArea>
-#include <QLabel>
-#include <QPushButton>
-#include <QGraphicsDropShadowEffect>
-#include <QEvent>
-#include <QMouseEvent>
 
 ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent) : QWidget(parent), m_date(date) {
     setFixedSize(StyleHelper::WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);

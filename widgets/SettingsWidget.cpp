@@ -1,11 +1,5 @@
 #include "SettingsWidget.h"
-#include "StyleHelper.h"
-#include "DatabaseManager.h"
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include <QLabel>
-#include <QMessageBox>
-#include <QSettings>
+#include "UiCommon.h"
 
 SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     setWindowTitle("설정");

@@ -1,11 +1,6 @@
 #include "ScheduleEdit.h"
-#include "StyleHelper.h"
+#include "UiCommon.h"
 #include "ColorPickerPopup.h"
-#include "../models/DatabaseManager.h"
-#include <QVBoxLayout>
-#include <QFormLayout>
-#include <QMessageBox>
-#include <QDebug>
 
 ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *parent) : QWidget(parent) {
     setFixedSize(StyleHelper::WIDGET_WIDTH, 520);
