@@ -11,7 +11,9 @@
 #include <QVariantMap>
 
 class DatabaseManager {
-public:    static DatabaseManager& instance();
+public:
+    static const QString DATE_FORMAT;
+    static DatabaseManager& instance();
 
     // Infrastructure
     bool initDatabase(const QString& dbName);

@@ -80,7 +80,7 @@ void ScheduleManagerWidget::refreshList() {
         
         QString timeStr = (s["all_day"].toInt() == 1) ? "하루 종일" : QString("%1 ~ %2").arg(s["start"].toString().mid(11, 5)).arg(s["end"].toString().mid(11, 5));
         QLabel *time = new QLabel(timeStr, itemWidget);
-        time->setStyleSheet(QString("color: %1; font-size: 12px; border: none; background: transparent;").arg(StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#AAA" : "#777"));
+        time->setStyleSheet(QString("color: #777; font-size: 12px; border: none; background: transparent;"));
 
         textLayout->addWidget(title);
         textLayout->addWidget(time);
@@ -116,7 +116,7 @@ bool ScheduleManagerWidget::eventFilter(QObject *obj, QEvent *event) {
     else if (event->type() == QEvent::HoverEnter) {
         widget->setStyleSheet(StyleHelper::getItemHoverStyle(colorStr));
         QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(widget);
-        shadow->setBlurRadius(15); shadow->setYOffset(4); shadow->setColor(QColor(0, 0, 0, (StyleHelper::currentTheme == StyleHelper::Theme::Dark ? 80 : 40)));
+        shadow->setBlurRadius(15); shadow->setYOffset(4); shadow->setColor(QColor(0, 0, 0, 40));
         widget->setGraphicsEffect(shadow);
     } 
     else if (event->type() == QEvent::HoverLeave) {

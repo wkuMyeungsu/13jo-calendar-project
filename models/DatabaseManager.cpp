@@ -1,5 +1,6 @@
-
 #include "DatabaseManager.h"
+
+const QString DatabaseManager::DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
 DatabaseManager& DatabaseManager::instance() {
     static DatabaseManager inst;
@@ -14,7 +15,10 @@ bool DatabaseManager::initDatabase(const QString& dbName) {
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(dbName);
 
-    if (!m_db.open()) return false;
+    if (!m_db.open()) {
+        qDebug() << "DB Open Error:" << m_db.lastError().text();
+        return false;
+    }
 
     QSqlQuery query;
     QString createSchedulesTable =
@@ -59,8 +63,8 @@ bool DatabaseManager::addSchedule(int categoryId, const QString& title, const QS
     query.bindValue(":cat_id", categoryId);
     query.bindValue(":title", title);
     query.bindValue(":content", content);
-    query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
-    query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
+    query.bindValue(":start", start.toString(DATE_FORMAT));
+    query.bindValue(":end", end.toString(DATE_FORMAT));
     query.bindValue(":color", color);
 
     return query.exec();
@@ -131,8 +135,8 @@ bool DatabaseManager::updateSchedule(int id, int categoryId, const QString& titl
     query.bindValue(":cat_id", categoryId);
     query.bindValue(":title", title);
     query.bindValue(":content", content);
-    query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
-    query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
+    query.bindValue(":start", start.toString(DATE_FORMAT));
+    query.bindValue(":end", end.toString(DATE_FORMAT));
     query.bindValue(":color", color);
     query.bindValue(":id", id);
 
@@ -190,9 +194,8 @@ bool DatabaseManager::deleteCategory(int id) {
 
 bool DatabaseManager::resetDatabase() {
     QSqlQuery query;
-    // 모든 일정 삭제
+
     if (!query.exec("DELETE FROM schedules")) return false;
-    // 모든 카테고리 삭제
     if (!query.exec("DELETE FROM categories")) return false;
     // 시퀀스 초기화 (ID 1부터 다시 시작하게 함)
     query.exec("DELETE FROM sqlite_sequence WHERE name='schedules' OR name='categories'");

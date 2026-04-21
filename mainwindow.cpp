@@ -187,23 +187,22 @@ void MainWindow::updateMainStyle() {
     QString bgColor = StyleHelper::getBgColor();
     QString textColor = StyleHelper::getTextColor();
     QString primary = StyleHelper::getPrimaryColor();
-    bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
 
     this->setStyleSheet(QString("QMainWindow { background-color: %1; }").arg(bgColor));
     ui->centralwidget->setStyleSheet(QString("#centralwidget { background-color: %1; }").arg(bgColor));
     m_container->setStyleSheet(QString("background-color: %1;").arg(bgColor));
     
-    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(bgColor, isDark ? "#333" : "#E0E0E0"));
+    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid #E0E0E0;").arg(bgColor));
     m_monthLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     
-    QString btnNavStyle = QString("QPushButton { border: none; font-size: 16px; color: %1; background: transparent; } QPushButton:hover { color: %2; }").arg(isDark ? "#AAA" : "#555", primary);
+    QString btnNavStyle = QString("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: %1; }").arg(primary);
     m_prevBtn->setStyleSheet(btnNavStyle);
     m_nextBtn->setStyleSheet(btnNavStyle);
 
-    m_todayBtn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 4px; font-size: 12px; color: %2; background: %3; } QPushButton:hover { border-color: %4; color: %4; }").arg(isDark ? "#444" : "#DDD", isDark ? "#AAA" : "#555", isDark ? "#2D2D2D" : "white", primary));
+    m_todayBtn->setStyleSheet(QString("QPushButton { border: 1px solid #DDD; border-radius: 4px; font-size: 12px; color: #555; background: white; } QPushButton:hover { border-color: %1; color: %1; }").arg(primary));
 
-    m_overflowWidget->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(isDark ? "#252525" : "#F9F9F9", isDark ? "#333" : "#E0E0E0"));
-    m_moreBtn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 4px; background: %2; color: %3; font-weight: bold; } QPushButton:checked { background: %4; color: white; border-color: %4; }").arg(isDark ? "#444" : "#BDBDBD", isDark ? "#2D2D2D" : "white", isDark ? "#AAA" : "#666", primary));
+    m_overflowWidget->setStyleSheet(QString("background-color: #F9F9F9; border-bottom: 1px solid #E0E0E0;"));
+    m_moreBtn->setStyleSheet(QString("QPushButton { border: 1px solid #BDBDBD; border-radius: 4px; background: white; color: #666; font-weight: bold; } QPushButton:checked { background: %1; color: white; border-color: %1; }").arg(primary));
 
     updateMiniModeStyle();
     updateCategoryBar();
@@ -211,15 +210,15 @@ void MainWindow::updateMainStyle() {
 
 void MainWindow::updateMiniModeStyle() {
     if (!m_miniWidget) return;
+
     QString bgColor = StyleHelper::getBgColor();
     QString textColor = StyleHelper::getTextColor();
     QString primary = StyleHelper::getPrimaryColor();
-    bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
 
     m_miniWidget->setStyleSheet(QString("background-color: %1;").arg(bgColor));
     m_miniTimeLabel->setStyleSheet(QString("font-size: 32px; font-weight: bold; color: %1; font-family: 'Consolas', monospace; background: transparent;").arg(textColor));
     m_miniDateLabel->setStyleSheet(QString("font-size: 16px; font-weight: bold; color: %1; background: transparent;").arg(primary));
-    m_pinBtn->setStyleSheet(QString("QPushButton { border: none; font-size: 16px; background: transparent; } QPushButton:checked { background: %1; border-radius: 15px; }").arg(isDark ? "#444" : "#E3F2FD"));
+    m_pinBtn->setStyleSheet(QString("QPushButton { border: none; font-size: 16px; background: transparent; } QPushButton:checked { background: #E3F2FD; border-radius: 15px; }"));
 
     if (QPushButton* sBtn = m_miniWidget->findChild<QPushButton*>("miniSettingsBtn")) sBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
     if (QPushButton* bBtn = m_miniWidget->findChild<QPushButton*>("miniBackBtn")) bBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
@@ -231,8 +230,10 @@ void MainWindow::setMiniMode(bool mini) {
 
     if (m_isMiniMode) {
         updateMiniModeStyle();
+
         m_headerBar->hide(); m_overflowWidget->hide(); m_container->hide();
         m_miniWidget->show();
+
         QDate today = QDate::currentDate();
         m_miniDateLabel->setText(today.toString("yyyy년 MM월 dd일 dddd"));
         
@@ -243,7 +244,6 @@ void MainWindow::setMiniMode(bool mini) {
         }
 
         auto schedules = DatabaseManager::instance().getSchedulesForDay(today);
-        bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
         
         if (schedules.isEmpty()) {
             QLabel* empty = new QLabel("오늘 일정이 없습니다.", m_miniWidget);
@@ -256,15 +256,17 @@ void MainWindow::setMiniMode(bool mini) {
                 itemWidget->setObjectName("itemWidget");
                 itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString()));
                 QHBoxLayout* itemLayout = new QHBoxLayout(itemWidget);
+
                 itemLayout->setContentsMargins(15, 12, 15, 12); itemLayout->setSpacing(10);
                 QLabel* titleLabel = new QLabel(s["title"].toString(), itemWidget);
                 titleLabel->setStyleSheet(QString("font-weight: bold; font-size: 13px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
                 itemLayout->addWidget(titleLabel, 1);
                 QString startStr = s["start"].toString().mid(11, 5);
                 QString endStr = s["end"].toString().mid(11, 5);
+
                 if (!((s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00"))) {
                     QLabel* timeLabel = new QLabel(QString("%1~%2").arg(startStr, endStr), itemWidget);
-                    timeLabel->setStyleSheet(QString("color: %1; font-size: 11px; border: none; background: transparent;").arg(isDark ? "#AAA" : "#888"));
+                    timeLabel->setStyleSheet(QString("color: #888; font-size: 11px; border: none; background: transparent;"));
                     itemLayout->addWidget(timeLabel);
                 }
                 m_miniScheduleLayout->addWidget(itemWidget);
@@ -279,20 +281,25 @@ void MainWindow::setMiniMode(bool mini) {
 
 void MainWindow::openSettingsWidget() {
     SettingsWidget *settings = new SettingsWidget();
+
     settings->setAttribute(Qt::WA_DeleteOnClose);
     settings->setWindowModality(Qt::ApplicationModal);
+
     connect(settings, &SettingsWidget::settingsChanged, this, [this]() {
         updateMainStyle();
         updateCalendar();
     });
+
     settings->show();
 }
 
 void MainWindow::togglePinned() {
     m_isPinned = !m_isPinned;
     m_pinBtn->setChecked(m_isPinned);
+
     if (m_isPinned) this->setFixedSize(this->size());
     else { this->setMinimumSize(300, 400); this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX); }
+
     this->setWindowFlag(Qt::WindowStaysOnTopHint, m_isPinned);
     this->show();
 }
@@ -300,26 +307,32 @@ void MainWindow::togglePinned() {
 void MainWindow::resizeEvent(QResizeEvent* event) {
     if (event->size().width() < 600) setMiniMode(true);
     else setMiniMode(false);
+
     if (m_isMiniMode && m_miniWidget) m_miniWidget->setGeometry(ui->centralwidget->rect());
     else updateLayoutPositions();
+
     QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::updateLayoutPositions() {
     if (m_isMiniMode) return;
     int w = ui->centralwidget->width(); if (w <= 0) return;
+
     m_headerBar->setGeometry(0, 0, w, kBaseHeaderH);
     m_headerBar->raise();
+
     if (m_isExpanded && m_moreBtn && !m_moreBtn->isHidden()) {
         m_overflowWidget->show();
         int btnCount = 0;
         for (int i = 0; i < m_overflowLayout->count(); ++i) if (m_overflowLayout->itemAt(i)->widget()) btnCount++;
         int overflowH = (btnCount > 0) ? 20 + (((btnCount + 4) / 5) * 22) + 10 : 0;
+
         m_overflowWidget->setFixedHeight(overflowH);
         m_overflowWidget->setGeometry(0, kBaseHeaderH, w, overflowH);
         m_overflowWidget->raise();
         m_currentHeaderH = kBaseHeaderH + overflowH;
     } else { m_overflowWidget->hide(); m_currentHeaderH = kBaseHeaderH; }
+
     int h = ui->centralwidget->height() - m_currentHeaderH;
     SafeZoneStage stage = getStageForHeight(h);
     
@@ -334,16 +347,21 @@ void MainWindow::updateLayoutPositions() {
 
 void MainWindow::updateCalendar() {
     m_monthLabel->setText(QString("%1년 %2월").arg(m_currentYear).arg(m_currentMonth));
+
     updateLayoutPositions();
+
     QDate current(m_currentYear, m_currentMonth, 1);
     QDate prev = current.addMonths(-1);
     QDate next = current.addMonths(1);
+
     auto getFiltered = [this](int y, int m) {
         QList<QVariantMap> raw = DatabaseManager::instance().getSchedulesForMonth(y, m);
         QList<QVariantMap> f;
-        for (const auto& s : raw) if (m_categoryFilters.value(s["category_id"].toInt(), true)) f.append(s);
+        for (const auto& s : raw)
+            if (m_categoryFilters.value(s["category_id"].toInt(), true)) f.append(s);
         return f;
     };
+
     m_months[0]->updateMonth(prev.year(), prev.month(), getFiltered(prev.year(), prev.month()));
     m_months[1]->updateMonth(current.year(), current.month(), getFiltered(current.year(), current.month()));
     m_months[2]->updateMonth(next.year(), next.month(), getFiltered(next.year(), next.month()));
@@ -352,10 +370,14 @@ void MainWindow::updateCalendar() {
 void MainWindow::wheelEvent(QWheelEvent* event) {
     if (m_isMiniMode || m_animation->state() == QAbstractAnimation::Running) return;
     m_xOffset += event->angleDelta().y() * 1.5;
+
     int w = ui->centralwidget->width();
-    if (m_xOffset > w) m_xOffset = w; if (m_xOffset < -w) m_xOffset = -w;
+
+    if (m_xOffset > w) m_xOffset = w;
+    if (m_xOffset < -w) m_xOffset = -w;
     m_container->move(-w + m_xOffset, m_currentHeaderH);
     m_scrollTimer->start(150);
+
     event->accept();
 }
 
@@ -369,8 +391,12 @@ void MainWindow::slideMonth(int direction) {
     if (m_animation->state() == QAbstractAnimation::Running) return;
     int w = ui->centralwidget->width();
     int targetX = (direction == -1) ? 0 : (direction == 1 ? -2 * w : -w);
-    m_animation->stop(); m_animation->setStartValue(m_container->pos()); m_animation->setEndValue(QPoint(targetX, m_currentHeaderH));
+
+    m_animation->stop();
+    m_animation->setStartValue(m_container->pos());
+    m_animation->setEndValue(QPoint(targetX, m_currentHeaderH));
     m_animation->disconnect(SIGNAL(finished()));
+
     connect(m_animation, &QPropertyAnimation::finished, [this, direction]() {
         if (direction != 0) {
             QDate date = QDate(m_currentYear, m_currentMonth, 1).addMonths(direction);
@@ -378,48 +404,95 @@ void MainWindow::slideMonth(int direction) {
         }
         m_xOffset = 0; updateCalendar();
     });
+
     m_animation->start();
 }
 
 void MainWindow::prevMonth() { slideMonth(-1); }
 void MainWindow::nextMonth() { slideMonth(1); }
-void MainWindow::goToday() { QDate t = QDate::currentDate(); m_currentYear = t.year(); m_currentMonth = t.month(); m_xOffset = 0; updateCalendar(); }
+void MainWindow::goToday() {
+    QDate today = QDate::currentDate();
+    QDate current(m_currentYear, m_currentMonth, 1);
+    QDate target(today.year(), today.month(), 1);
+
+    if (current == target) {
+        m_xOffset = 0; updateCalendar();
+        return;
+    }
+
+    // 방향 결정: 오늘이 과거면 -1(왼쪽에서 등장), 미래면 1(오른쪽에서 등장)
+    int direction = (target < current) ? -1 : 1;
+    if (m_animation->state() == QAbstractAnimation::Running) return;
+    
+    int w = ui->centralwidget->width();
+    int targetX = (direction == -1) ? 0 : -2 * w;
+
+    m_animation->stop();
+    m_animation->setStartValue(m_container->pos());
+    m_animation->setEndValue(QPoint(targetX, m_currentHeaderH));
+
+    m_animation->disconnect(SIGNAL(finished()));
+    connect(m_animation, &QPropertyAnimation::finished, [this, today]() {
+        m_animation->disconnect(SIGNAL(finished()));
+        m_currentYear = today.year();
+        m_currentMonth = today.month();
+        m_xOffset = 0;
+        updateCalendar();
+    });
+    m_animation->start();
+}
 
 void MainWindow::handleDayDoubleClicked(const QDate& date) {
     ScheduleManagerWidget *w = new ScheduleManagerWidget(date);
+
     w->setAttribute(Qt::WA_DeleteOnClose); w->setWindowModality(Qt::ApplicationModal);
     connect(w, &ScheduleManagerWidget::dataChanged, this, &MainWindow::updateCalendar);
+
     w->show();
 }
 
 void MainWindow::handleDayAddRequested(const QDate& date) {
     ScheduleInputWidget *w = new ScheduleInputWidget(date);
+
     w->setAttribute(Qt::WA_DeleteOnClose); w->setWindowModality(Qt::ApplicationModal);
     connect(w, &ScheduleInputWidget::scheduleSaved, this, &MainWindow::updateCalendar);
+
     w->show();
 }
 
 void MainWindow::openCategoryManager() {
-    CategoryModifyWidget *w = new CategoryModifyWidget(); 
+    CategoryModifyWidget *w = new CategoryModifyWidget();
+
     w->setAttribute(Qt::WA_DeleteOnClose);
     connect(w, &CategoryModifyWidget::categoriesChanged, this, &MainWindow::updateCategoryBar);
     connect(w, &CategoryModifyWidget::categoriesChanged, this, &MainWindow::updateCalendar);
+
     w->show();
 }
 
 void MainWindow::updateCategoryBar() {
     QLayoutItem *item;
-    while ((item = m_categoryLayout->takeAt(0)) != nullptr) { if (item->widget() && item->widget() != m_moreBtn) item->widget()->deleteLater(); delete item; }
-    while ((item = m_overflowLayout->takeAt(0)) != nullptr) { if (item->widget()) item->widget()->deleteLater(); delete item; }
+
+    while ((item = m_categoryLayout->takeAt(0)) != nullptr)
+    { if (item->widget() && item->widget() != m_moreBtn) item->widget()->deleteLater(); delete item; }
+    while ((item = m_overflowLayout->takeAt(0)) != nullptr)
+    { if (item->widget()) item->widget()->deleteLater(); delete item; }
+
     auto categories = DatabaseManager::instance().getCategories();
     int count = 0;
     QString bgColor = StyleHelper::getBgColor();
-    bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
+
     for (const auto& cat : categories) {
-        int id = cat["id"].toInt(); if (!m_categoryFilters.contains(id)) m_categoryFilters[id] = true;
+        int id = cat["id"].toInt();
+        if (!m_categoryFilters.contains(id)) m_categoryFilters[id] = true;
         QPushButton* btn = new QPushButton(cat["name"].toString(), this);
-        btn->setCheckable(true); btn->setChecked(m_categoryFilters[id]); btn->setFixedHeight(22);
-        btn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 10px; padding: 0px 12px; font-size: 11px; color: %1; background: %2; font-weight: bold; } QPushButton:checked { background-color: %1; color: white; }").arg(cat["color"].toString(), bgColor));
+
+        btn->setCheckable(true);
+        btn->setChecked(m_categoryFilters[id]);
+        btn->setFixedHeight(22);
+        btn->setStyleSheet(
+            QString("QPushButton { border: 1px solid %1; border-radius: 10px; padding: 0px 12px; font-size: 11px; color: %1; background: %2; font-weight: bold; } QPushButton:checked { background-color: %1; color: white; }").arg(cat["color"].toString(), bgColor));
+
         connect(btn, &QPushButton::toggled, [this, id](bool c) { m_categoryFilters[id] = c; updateCalendar(); });
         if (count < 3) m_categoryLayout->addWidget(btn);
         else m_overflowLayout->addWidget(btn, (count - 3) / 5, (count - 3) % 5, Qt::AlignLeft);
@@ -428,7 +501,7 @@ void MainWindow::updateCategoryBar() {
     if (count > 3) { m_categoryLayout->addWidget(m_moreBtn); m_moreBtn->show(); m_overflowWidget->setVisible(m_isExpanded); }
     else { m_moreBtn->hide(); m_isExpanded = false; m_overflowWidget->hide(); }
     QPushButton* addBtn = new QPushButton("+", this);
-    addBtn->setFixedSize(22, 22); addBtn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 11px; background-color: %2; color: %3; font-size: 16px; font-weight: bold; } QPushButton:hover { background-color: %4; color: white; }").arg(isDark ? "#444" : "#E0E0E0", bgColor, isDark ? "#AAA" : "#757575", StyleHelper::getPrimaryColor()));
+    addBtn->setFixedSize(22, 22); addBtn->setStyleSheet(QString("QPushButton { border: 1px solid #E0E0E0; border-radius: 11px; background-color: %1; color: #757575; font-size: 16px; font-weight: bold; } QPushButton:hover { background-color: %2; color: white; }").arg(bgColor, StyleHelper::getPrimaryColor()));
     connect(addBtn, &QPushButton::clicked, this, &MainWindow::openCategoryManager);
     m_categoryLayout->addWidget(addBtn);
 }

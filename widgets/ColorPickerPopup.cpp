@@ -2,7 +2,6 @@
 #include "UiCommon.h"
 
 ColorPickerPopup::ColorPickerPopup(QWidget *parent) : QWidget(parent) {
-    // 팝업 설정: 테두리 없음, 항상 위, 배경 투명 (라운드 처리를 위함)
     setWindowFlags(Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
 
@@ -25,7 +24,7 @@ void ColorPickerPopup::setupUI() {
     ).arg(StyleHelper::getBgColor()));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(10, 10, 10, 10); // 그림자 영역 확보
+    mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(container);
 
     QGridLayout *gridLayout = new QGridLayout(container);

@@ -23,7 +23,6 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     // 테마 선택 콤보박스
     m_themeCombo = new QComboBox(this);
     m_themeCombo->addItem("기본 (White & Blue)", static_cast<int>(StyleHelper::Theme::Default));
-    m_themeCombo->addItem("다크 모드", static_cast<int>(StyleHelper::Theme::Dark));
     m_themeCombo->addItem("소프트 파스텔", static_cast<int>(StyleHelper::Theme::Soft));
     m_themeCombo->addItem("딥 블루", static_cast<int>(StyleHelper::Theme::DeepBlue));
     
