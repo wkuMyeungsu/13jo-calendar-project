@@ -39,6 +39,13 @@ struct SafeZoneStage {
     int maxSlots;
     int slotHeight;
     int fontSize;
+
+    bool operator==(const SafeZoneStage& other) const {
+        return maxSlots == other.maxSlots && slotHeight == other.slotHeight && fontSize == other.fontSize;
+    }
+    bool operator!=(const SafeZoneStage& other) const {
+        return !(*this == other);
+    }
 };
 
 inline SafeZoneStage getStageForHeight(int h) {

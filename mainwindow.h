@@ -9,6 +9,8 @@
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QMap>
+#include <QSizeGrip>
+#include "CustomTitleBar.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,6 +31,7 @@ public:
 protected:
     void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void changeEvent(QEvent* event) override;
 
 public slots:
     void updateCalendar();
@@ -53,8 +56,12 @@ private:
     void updateMiniModeStyle(); 
     void updateMainStyle(); // 일반 모드 테마 스타일 갱신
 
+    static constexpr int kTitleBarH   = 30;
     static constexpr int kBaseHeaderH = 52;
     int m_currentHeaderH;
+
+    CustomTitleBar* m_titleBar;
+    QSizeGrip*      m_sizeGrip;
 
     Ui::MainWindow *ui;
 

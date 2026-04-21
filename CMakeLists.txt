@@ -42,6 +42,8 @@ qt_add_executable(13jo-calendar-project
         widgets/SettingsWidget.h
         widgets/ColorPickerPopup.cpp
         widgets/ColorPickerPopup.h
+        widgets/CustomTitleBar.h
+        widgets/CustomTitleBar.cpp
         models/DatabaseManager.cpp
         models/DatabaseManager.h
         resources.rc

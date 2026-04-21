@@ -24,8 +24,22 @@ MainWindow::MainWindow(QWidget *parent)
     int savedTheme = settings.value("theme", static_cast<int>(StyleHelper::Theme::Default)).toInt();
     StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(savedTheme);
 
+    setWindowFlag(Qt::FramelessWindowHint);
     ui->setupUi(this);
-    setMinimumSize(400, 500); // 최소 높이 강제 (겹침 방지)
+    setMinimumSize(400, 500);
+
+    // [Fix] 하단 중복 드래그 UI(SizeGrip) 제거
+    ui->statusbar->setSizeGripEnabled(false);
+    ui->statusbar->hide();
+
+    // 커스텀 타이틀바
+    m_titleBar = new CustomTitleBar(ui->centralwidget);
+    m_titleBar->raise();
+
+    // 우하단 리사이즈 핸들
+    m_sizeGrip = new QSizeGrip(ui->centralwidget);
+    m_sizeGrip->setFixedSize(16, 16);
+    m_sizeGrip->raise();
 
     if (!DatabaseManager::instance().initDatabase("calendar_data.db")) {
         qDebug() << "Database initialization failed.";
@@ -189,6 +203,9 @@ void MainWindow::updateMainStyle() {
     QString primary = StyleHelper::getPrimaryColor();
     QString borderColor = (StyleHelper::currentTheme == StyleHelper::Theme::Default) ? "#E0E0E0" : "#ADCCFB";
 
+    // 0. 커스텀 타이틀바
+    m_titleBar->applyTheme(bgColor, textColor, borderColor);
+
     // 1. 전체 배경 및 컨테이너
     this->setStyleSheet(QString("QMainWindow { background-color: %1; }").arg(bgColor));
     ui->centralwidget->setStyleSheet(QString("#centralwidget { background-color: %1; }").arg(bgColor));
@@ -242,6 +259,10 @@ void MainWindow::setMiniMode(bool mini) {
 
         m_headerBar->hide(); m_overflowWidget->hide(); m_container->hide();
         m_miniWidget->show();
+        int w = ui->centralwidget->width();
+        int h = ui->centralwidget->height();
+        m_titleBar->setGeometry(0, 0, w, kTitleBarH);
+        m_miniWidget->setGeometry(0, kTitleBarH, w, h - kTitleBarH);
 
         QDate today = QDate::currentDate();
         m_miniDateLabel->setText(today.toString("yyyy년 MM월 dd일 dddd"));
@@ -317,8 +338,17 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     if (event->size().width() < 600) setMiniMode(true);
     else setMiniMode(false);
 
-    if (m_isMiniMode && m_miniWidget) m_miniWidget->setGeometry(ui->centralwidget->rect());
-    else updateLayoutPositions();
+    if (m_isMiniMode && m_miniWidget) {
+        int w = ui->centralwidget->width();
+        int h = ui->centralwidget->height();
+        m_titleBar->setGeometry(0, 0, w, kTitleBarH);
+        m_miniWidget->setGeometry(0, kTitleBarH, w, h - kTitleBarH);
+    } else {
+        updateLayoutPositions();
+    }
+
+    m_sizeGrip->setVisible(!isMaximized());
+    m_titleBar->updateMaxIcon();
 
     QMainWindow::resizeEvent(event);
 }
@@ -326,8 +356,12 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
 void MainWindow::updateLayoutPositions() {
     if (m_isMiniMode) return;
     int w = ui->centralwidget->width(); if (w <= 0) return;
+    int totalH = ui->centralwidget->height();
 
-    m_headerBar->setGeometry(0, 0, w, kBaseHeaderH);
+    m_titleBar->setGeometry(0, 0, w, kTitleBarH);
+    m_titleBar->raise();
+
+    m_headerBar->setGeometry(0, kTitleBarH, w, kBaseHeaderH);
     m_headerBar->raise();
 
     if (m_isExpanded && m_moreBtn && !m_moreBtn->isHidden()) {
@@ -337,21 +371,24 @@ void MainWindow::updateLayoutPositions() {
         int overflowH = (btnCount > 0) ? 20 + (((btnCount + 4) / 5) * 22) + 10 : 0;
 
         m_overflowWidget->setFixedHeight(overflowH);
-        m_overflowWidget->setGeometry(0, kBaseHeaderH, w, overflowH);
+        m_overflowWidget->setGeometry(0, kTitleBarH + kBaseHeaderH, w, overflowH);
         m_overflowWidget->raise();
         m_currentHeaderH = kBaseHeaderH + overflowH;
     } else { m_overflowWidget->hide(); m_currentHeaderH = kBaseHeaderH; }
 
-    int h = ui->centralwidget->height() - m_currentHeaderH;
-    SafeZoneStage stage = getStageForHeight(h);
-    
-    m_container->resize(w * 3, h);
+    int contentH = totalH - kTitleBarH - m_currentHeaderH;
+    SafeZoneStage stage = getStageForHeight(contentH);
+
+    m_container->resize(w * 3, contentH);
     for (int i = 0; i < 3; ++i) {
         m_months[i]->setStage(stage);
-        m_months[i]->setGeometry(i * w, 0, w, h);
+        m_months[i]->setGeometry(i * w, 0, w, contentH);
     }
-    m_container->move(-w + m_xOffset, m_currentHeaderH);
+    m_container->move(-w + m_xOffset, kTitleBarH + m_currentHeaderH);
     m_container->lower();
+
+    m_sizeGrip->move(w - m_sizeGrip->width(), totalH - m_sizeGrip->height());
+    m_sizeGrip->raise();
 }
 
 void MainWindow::updateCalendar() {
@@ -376,6 +413,14 @@ void MainWindow::updateCalendar() {
     m_months[2]->updateMonth(next.year(), next.month(), getFiltered(next.year(), next.month()));
 }
 
+void MainWindow::changeEvent(QEvent* event) {
+    if (event->type() == QEvent::WindowStateChange && m_titleBar) {
+        m_titleBar->updateMaxIcon();
+        m_sizeGrip->setVisible(!isMaximized());
+    }
+    QMainWindow::changeEvent(event);
+}
+
 void MainWindow::wheelEvent(QWheelEvent* event) {
     if (m_isMiniMode || m_animation->state() == QAbstractAnimation::Running) return;
     m_xOffset += event->angleDelta().y() * 1.5;
@@ -384,7 +429,7 @@ void MainWindow::wheelEvent(QWheelEvent* event) {
 
     if (m_xOffset > w) m_xOffset = w;
     if (m_xOffset < -w) m_xOffset = -w;
-    m_container->move(-w + m_xOffset, m_currentHeaderH);
+    m_container->move(-w + m_xOffset, kTitleBarH + m_currentHeaderH);
     m_scrollTimer->start(150);
 
     event->accept();
@@ -403,7 +448,7 @@ void MainWindow::slideMonth(int direction) {
 
     m_animation->stop();
     m_animation->setStartValue(m_container->pos());
-    m_animation->setEndValue(QPoint(targetX, m_currentHeaderH));
+    m_animation->setEndValue(QPoint(targetX, kTitleBarH + m_currentHeaderH));
     m_animation->disconnect(SIGNAL(finished()));
 
     connect(m_animation, &QPropertyAnimation::finished, [this, direction]() {
@@ -438,7 +483,7 @@ void MainWindow::goToday() {
 
     m_animation->stop();
     m_animation->setStartValue(m_container->pos());
-    m_animation->setEndValue(QPoint(targetX, m_currentHeaderH));
+    m_animation->setEndValue(QPoint(targetX, kTitleBarH + m_currentHeaderH));
 
     m_animation->disconnect(SIGNAL(finished()));
     connect(m_animation, &QPropertyAnimation::finished, [this, today]() {

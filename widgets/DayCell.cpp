@@ -66,6 +66,8 @@ DayCell::DayCell(QWidget* parent)
 }
 
 void DayCell::setStage(const SafeZoneStage& stage) {
+    if (m_stage == stage) return; // Stage가 변하지 않았으면 재생성 생략 (깜빡임 방지)
+    
     m_stage = stage;
     m_moreLabel->setFixedHeight(stage.slotHeight);
     m_moreLabel->setStyleSheet(QString("font-size: %1px; color: #777; font-weight: bold; padding: 0px 5px;").arg(stage.fontSize - 1));
