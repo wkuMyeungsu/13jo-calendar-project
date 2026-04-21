@@ -43,30 +43,59 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ── 일반 모드 UI 구성 ──
     m_headerBar = new QWidget(ui->centralwidget);
+    m_headerBar->setStyleSheet("background-color: white; border-bottom: 1px solid #E0E0E0;");
     QHBoxLayout* headerLayout = new QHBoxLayout(m_headerBar);
     headerLayout->setContentsMargins(15, 0, 15, 0);
+    headerLayout->setSpacing(0);
 
+    // [좌측 영역] : 카테고리 필터 (공간 확보용)
     QWidget* leftGroup = new QWidget(m_headerBar);
     m_categoryLayout = new QHBoxLayout(leftGroup);
     m_categoryLayout->setContentsMargins(0, 0, 0, 0);
     m_categoryLayout->setSpacing(6);
+    m_categoryLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
+    // [중앙 영역] : 월 표시 및 이동 버튼 (밀착 배치)
     QWidget* centerGroup = new QWidget(m_headerBar);
     QHBoxLayout* centerLayout = new QHBoxLayout(centerGroup);
+    centerLayout->setContentsMargins(0, 0, 0, 0);
+    centerLayout->setSpacing(8); // 버튼과 라벨 사이 간격
+    centerLayout->setAlignment(Qt::AlignCenter);
+
     m_prevBtn = new QPushButton("◀", centerGroup);
+    m_prevBtn->setFixedSize(30, 30);
+    m_prevBtn->setCursor(Qt::PointingHandCursor);
+    m_prevBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: #4A90E2; }");
+
     m_monthLabel = new QLabel(centerGroup);
+    m_monthLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #222; border: none; background: transparent;");
+    m_monthLabel->setAlignment(Qt::AlignCenter);
+    m_monthLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred); // 텍스트 크기에 맞게
+
     m_nextBtn = new QPushButton("▶", centerGroup);
+    m_nextBtn->setFixedSize(30, 30);
+    m_nextBtn->setCursor(Qt::PointingHandCursor);
+    m_nextBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: #4A90E2; }");
+
     centerLayout->addWidget(m_prevBtn);
     centerLayout->addWidget(m_monthLabel);
     centerLayout->addWidget(m_nextBtn);
 
+    // [우측 영역] 오늘 버튼
     QWidget* rightGroup = new QWidget(m_headerBar);
     QHBoxLayout* rightLayout = new QHBoxLayout(rightGroup);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
+    rightLayout->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
     m_todayBtn = new QPushButton("오늘", rightGroup);
+    m_todayBtn->setFixedSize(50, 28);
+    m_todayBtn->setCursor(Qt::PointingHandCursor);
+    m_todayBtn->setStyleSheet("QPushButton { border: 1px solid #DDD; border-radius: 4px; font-size: 12px; color: #555; background: white; } QPushButton:hover { border-color: #4A90E2; color: #4A90E2; }");
     rightLayout->addWidget(m_todayBtn);
 
+    // 전체 헤더 배치: 좌우에 동일한 가중치(1)를 주어 중앙 영역이 정중앙에 오도록 보장
     headerLayout->addWidget(leftGroup, 1);
-    headerLayout->addWidget(centerGroup, 0);
+    headerLayout->addWidget(centerGroup, 0); // 중앙 그룹은 최소 공간만 차지
     headerLayout->addWidget(rightGroup, 1);
 
     connect(m_prevBtn, &QPushButton::clicked, this, &MainWindow::prevMonth);
@@ -180,7 +209,6 @@ void MainWindow::updateMiniModeStyle() {
     QPushButton* backToFull = m_miniWidget->findChild<QPushButton*>("miniBackBtn");
     if (backToFull) backToFull->setStyleSheet(StyleHelper::getBtnSaveStyle());
 
-    // 일반 모드 헤더바 등도 같이 업데이트
     m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(bgColor, StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#333" : "#E0E0E0"));
     m_monthLabel->setStyleSheet(QString("font-size: 18px; font-weight: bold; color: %1; border: none; background: transparent;").arg(textColor));
 }
@@ -216,7 +244,6 @@ void MainWindow::setMiniMode(bool mini) {
             for (const auto& s : schedules) {
                 QWidget* itemWidget = new QWidget(m_miniWidget);
                 itemWidget->setObjectName("itemWidget");
-                
                 QString colorStr = s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString();
                 itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
 
@@ -224,12 +251,10 @@ void MainWindow::setMiniMode(bool mini) {
                 itemLayout->setContentsMargins(15, 12, 15, 12);
                 itemLayout->setSpacing(10);
 
-                // [왼쪽] 제목 라벨
                 QLabel* titleLabel = new QLabel(s["title"].toString(), itemWidget);
                 titleLabel->setStyleSheet(QString("font-weight: bold; font-size: 13px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
-                itemLayout->addWidget(titleLabel, 1); // 제목에 가중치 1 부여
+                itemLayout->addWidget(titleLabel, 1);
 
-                // [오른쪽] 시간 정보 (있을 경우만)
                 QString startStr = s["start"].toString().mid(11, 5);
                 QString endStr = s["end"].toString().mid(11, 5);
                 bool isAllDay = (s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00");
@@ -240,9 +265,8 @@ void MainWindow::setMiniMode(bool mini) {
                     timeLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
                     itemLayout->addWidget(timeLabel);
                 } else {
-                    itemLayout->addStretch(0); // 빈 공간 확보
+                    itemLayout->addStretch(0);
                 }
-
                 m_miniScheduleLayout->addWidget(itemWidget);
             }
         }
@@ -252,6 +276,15 @@ void MainWindow::setMiniMode(bool mini) {
         m_container->show();
         updateLayoutPositions();
     }
+}
+
+void MainWindow::togglePinned() {
+    m_isPinned = !m_isPinned;
+    m_pinBtn->setChecked(m_isPinned);
+    if (m_isPinned) this->setFixedSize(this->size());
+    else { this->setMinimumSize(300, 400); this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX); }
+    this->setWindowFlag(Qt::WindowStaysOnTopHint, m_isPinned);
+    this->show();
 }
 
 void MainWindow::openSettingsWidget() {
@@ -264,25 +297,6 @@ void MainWindow::openSettingsWidget() {
         updateCalendar();
     });
     settings->show();
-}
-
-void MainWindow::togglePinned() {
-    m_isPinned = !m_isPinned;
-    m_pinBtn->setChecked(m_isPinned);
-
-    // 1. 크기 제어 (플래그 변경 전 수행)
-    if (m_isPinned) {
-        this->setFixedSize(this->size());
-    } else {
-        this->setMinimumSize(300, 400);
-        this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-    }
-
-    // 2. 상단 고정 플래그만 개별 제어 (setWindowFlags 전체 교체보다 훨씬 부드러움)
-    this->setWindowFlag(Qt::WindowStaysOnTopHint, m_isPinned);
-    
-    // 3. 변경사항 적용을 위해 다시 표시 (이때만 깜빡임 발생 최소화)
-    this->show();
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -330,6 +344,7 @@ void MainWindow::updateLayoutPositions() {
 }
 
 void MainWindow::updateCalendar() {
+    m_monthLabel->setText(QString("%1년 %2월").arg(m_currentYear).arg(m_currentMonth));
     updateLayoutPositions();
     QDate current(m_currentYear, m_currentMonth, 1);
     QDate prev = current.addMonths(-1);
