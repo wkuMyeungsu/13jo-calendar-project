@@ -39,7 +39,7 @@ namespace UiConstants {
     static constexpr int DAYS_IN_WEEK = 7;
     static constexpr int MAX_CALENDAR_CELLS = 42;
     static constexpr int CELL_MIN_SIZE = 40;
-    static constexpr int DATE_HEADER_HEIGHT = 22;
+    static constexpr int DATE_HEADER_HEIGHT = 18;
 
     // Font Sizes
     static constexpr int FONT_SIZE_TITLE = 11;

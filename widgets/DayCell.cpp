@@ -11,7 +11,7 @@ DayCell::DayCell(QWidget* parent)
 {
     setFrameStyle(QFrame::NoFrame);
     setMinimumSize(UiConstants::CELL_MIN_SIZE, UiConstants::CELL_MIN_SIZE);
-    m_stage = {2, 22, 11}; 
+    m_stage = {2, 16, 9, 14, 9}; // 기본 Stage 1 설정
 
     // 메인 레이아웃
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -20,7 +20,7 @@ DayCell::DayCell(QWidget* parent)
 
     // [1] Date Header 영역
     m_dateLabel = new QLabel(this);
-    m_dateLabel->setFixedHeight(UiConstants::DATE_HEADER_HEIGHT);
+    m_dateLabel->setFixedHeight(m_stage.dateHeight);
     m_dateLabel->setStyleSheet("font-weight: bold; border: none; background: transparent;");
     mainLayout->addWidget(m_dateLabel, 0, Qt::AlignTop | Qt::AlignLeft);
 
@@ -29,7 +29,7 @@ DayCell::DayCell(QWidget* parent)
 
     // [3] 정보 블록 컨테이너
     m_scheduleLayout = new QVBoxLayout();
-    m_scheduleLayout->setSpacing(0);
+    m_scheduleLayout->setSpacing(1); // 슬롯 간 간격
     m_scheduleLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->addLayout(m_scheduleLayout);
 
@@ -45,7 +45,7 @@ DayCell::DayCell(QWidget* parent)
     // [5] 하단 완충 여백
     mainLayout->addStretch(1);
 
-    // [6] 호버 힌트 라벨 (+) - 생성 시에는 기본 속성만 설정
+    // [6] 호버 힌트 라벨 (+)
     m_hoverHintLabel = new QLabel("+", this);
     m_hoverHintLabel->setAlignment(Qt::AlignCenter);
     m_hoverHintLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -66,22 +66,20 @@ void DayCell::updateStyle() {
     QString border = QString("0.5px solid %1").arg(UiConstants::COLOR_BORDER_DEFAULT);
     QString bgColor = "white";
 
-    // 1. 선택 및 오늘 하이라이트 경계선 결정
-    if (m_isSelected) {
-        border = QString("2px solid %1").arg(primary);
-    } else if (m_isToday) {
-        border = "2px solid #FF9800";
-    }
+    if (m_isSelected) border = QString("2px solid %1").arg(primary);
+    else if (m_isToday) border = "2px solid #FF9800";
 
-    // 2. 호버 배경색 결정
-    if (m_isHovered) {
-        bgColor = StyleHelper::getDayCellHoverBg();
-    }
+    if (m_isHovered) bgColor = StyleHelper::getDayCellHoverBg();
 
-    // 3. 메인 컨테이너 스타일 적용
     setStyleSheet(QString("DayCell { border: %1; background-color: %2; }").arg(border, bgColor));
 
-    // 4. [+] 기호 색상 테마 동기화 (핵심 수정 사항)
+    // 날짜 폰트 및 스타일 갱신
+    QString dateColor = m_isToday ? "#FF9800" : (m_date.dayOfWeek() == 6 ? UiConstants::COLOR_SAT : (m_date.dayOfWeek() == 7 ? UiConstants::COLOR_SUN : "#333"));
+    m_dateLabel->setStyleSheet(QString(
+        "font-weight: bold; color: %1; border: none; background: transparent; "
+        "padding-left: 8px; font-size: %2px;")
+        .arg(dateColor).arg(m_stage.dateFontSize));
+
     m_hoverHintLabel->setStyleSheet(
         QString("font-size: 32px; font-weight: bold; color: %1; background: transparent;").arg(primary)
     );
@@ -97,8 +95,16 @@ void DayCell::setSelected(bool select) {
 void DayCell::setStage(const SafeZoneStage& stage) {
     if (m_stage == stage) return;
     m_stage = stage;
+    
+    m_dateLabel->setFixedHeight(stage.dateHeight);
+    updateStyle();
+
     m_moreLabel->setFixedHeight(stage.slotHeight);
-    m_moreLabel->setStyleSheet(QString("font-size: %1px; color: %2; font-weight: bold; padding: 0px 5px;").arg(stage.fontSize - 1).arg(UiConstants::COLOR_TEXT_DIM));
+    m_moreLabel->setStyleSheet(QString(
+        "background-color: #F0F0F0; color: #666; font-size: %1px; font-weight: bold; "
+        "border-radius: 4px; margin: 0px 4px;")
+        .arg(stage.fontSize - 1));
+
     if (!m_currentSlots.isEmpty()) setSchedules(m_currentSlots);
 }
 
@@ -106,53 +112,44 @@ void DayCell::setDate(const QDate& date) {
     m_date = date;
     m_isToday = (date == QDate::currentDate());
     m_dateLabel->setText(QString::number(date.day()));
-    
-    if (m_isToday) {
-        m_dateLabel->setMinimumWidth(0); m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
-        m_dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        m_dateLabel->setStyleSheet("font-weight: bold; color: #FF9800; border: none; background: transparent; padding-left: 8px;");
-    } else {
-        m_dateLabel->setMinimumWidth(0); m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
-        m_dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        QString color = (date.dayOfWeek() == 6) ? UiConstants::COLOR_SAT : (date.dayOfWeek() == 7 ? UiConstants::COLOR_SUN : "#333");
-        m_dateLabel->setStyleSheet(QString("font-weight: bold; color: %1; border: none; background: transparent; padding-left: 8px;").arg(color));
-    }
     updateStyle();
 }
 
 static QLabel* createScheduleBar(const Schedule& data, const QDate& cellDate, const SafeZoneStage& stage, QWidget* parent) {
     QLabel* label = new QLabel(parent);
     label->setFixedHeight(stage.slotHeight);
+    label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    label->setContentsMargins(0, 0, 0, 0);
+
     QDate startD = data.start.date();
     QDate endD   = data.end.date();
     bool isStartDay  = (startD == cellDate);
     bool isEndDay    = (endD   == cellDate);
     bool isMultiDay  = (startD != endD);
-    bool isBarType   = isMultiDay || data.isAllDay; // 멀티데이거나 하루 종일인 경우 바 형태로 표시
+    bool isBarType   = isMultiDay || data.isAllDay;
 
     if (isStartDay || cellDate.dayOfWeek() == 7 || cellDate.day() == 1)
         label->setText(" " + data.title);
 
     QColor baseColor(data.color);
-    if (isBarType) {
-        QString lr = (isStartDay || data.isAllDay) ? "4px" : "0px";
-        QString rr = (isEndDay || data.isAllDay) ? "4px" : "0px";
-        QString borderLeft = (isStartDay || data.isAllDay) ? QString("3px solid %1").arg(baseColor.name()) : "none";
-        
-        label->setStyleSheet(QString(
-            "background-color: rgba(%1, %2, %3, 50); color: #333; border-left: %4; "
-            "border-top-left-radius: %5; border-bottom-left-radius: %5; "
-            "border-top-right-radius: %6; border-bottom-right-radius: %6; "
-            "font-size: %7px; font-weight: bold; margin: 1px %8px;")
-            .arg(baseColor.red()).arg(baseColor.green()).arg(baseColor.blue())
-            .arg(borderLeft).arg(lr).arg(rr).arg(stage.fontSize)
-            .arg(data.isAllDay && !isMultiDay ? 4 : 0)); // 단일 날짜 하루종일 바는 좌우 여백 살짝 부여
-    } else {
-        label->setText(" •" + label->text());
-        label->setStyleSheet(QString(
-            "background-color: transparent; color: %1; font-size: %2px; font-weight: bold; margin: 1px 0px;")
-            .arg(baseColor.name()).arg(stage.fontSize));
-    }
+    // [통합 디자인 필(Pill)]
+    QString lr = (isStartDay || data.isAllDay) ? "4px" : "0px";
+    QString rr = (isEndDay || data.isAllDay) ? "4px" : "0px";
+    QString borderLeft = (isStartDay || data.isAllDay) ? QString("3px solid %1").arg(baseColor.name()) : "none";
+    
+    QString bgColor = isBarType ? QString("rgba(%1, %2, %3, 50)").arg(baseColor.red()).arg(baseColor.green()).arg(baseColor.blue()) : "transparent";
+    
+    int marginLeft = (isStartDay || data.isAllDay) ? 4 : 0;
+    int marginRight = (isEndDay || data.isAllDay) ? 4 : 0;
+
+    label->setStyleSheet(QString(
+        "background-color: %1; color: #333; border-left: %2; "
+        "border-top-left-radius: %3; border-bottom-left-radius: %3; "
+        "border-top-right-radius: %4; border-bottom-right-radius: %4; "
+        "font-size: %5px; font-weight: bold; "
+        "margin-top: 0px; margin-bottom: 0px; margin-left: %6px; margin-right: %7px; padding: 0px;")
+        .arg(bgColor, borderLeft, lr, rr)
+        .arg(stage.fontSize).arg(marginLeft).arg(marginRight));
     
     QString timeInfo = data.isAllDay ? "하루 종일" : QString("%1 ~ %2").arg(data.start.toString("HH:mm"), data.end.toString("HH:mm"));
     label->setToolTip(QString("%1\n%2").arg(data.title, timeInfo));
