@@ -187,22 +187,31 @@ void MainWindow::updateMainStyle() {
     QString bgColor = StyleHelper::getBgColor();
     QString textColor = StyleHelper::getTextColor();
     QString primary = StyleHelper::getPrimaryColor();
+    QString borderColor = (StyleHelper::currentTheme == StyleHelper::Theme::Default) ? "#E0E0E0" : "#ADCCFB";
 
+    // 1. 전체 배경 및 컨테이너
     this->setStyleSheet(QString("QMainWindow { background-color: %1; }").arg(bgColor));
     ui->centralwidget->setStyleSheet(QString("#centralwidget { background-color: %1; }").arg(bgColor));
     m_container->setStyleSheet(QString("background-color: %1;").arg(bgColor));
     
-    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid #E0E0E0;").arg(bgColor));
+    // 2. 헤더 바
+    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(bgColor, borderColor));
     m_monthLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     
-    QString btnNavStyle = QString("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: %1; }").arg(primary);
+    QString btnNavStyle = QString("QPushButton { border: none; font-size: 16px; color: %1; background: transparent; } QPushButton:hover { color: %2; }").arg("#555", primary);
     m_prevBtn->setStyleSheet(btnNavStyle);
     m_nextBtn->setStyleSheet(btnNavStyle);
 
-    m_todayBtn->setStyleSheet(QString("QPushButton { border: 1px solid #DDD; border-radius: 4px; font-size: 12px; color: #555; background: white; } QPushButton:hover { border-color: %1; color: %1; }").arg(primary));
+    m_todayBtn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 4px; font-size: 12px; color: #555; background: %2; } QPushButton:hover { border-color: %3; color: %3; }").arg(borderColor, bgColor, primary));
 
-    m_overflowWidget->setStyleSheet(QString("background-color: #F9F9F9; border-bottom: 1px solid #E0E0E0;"));
-    m_moreBtn->setStyleSheet(QString("QPushButton { border: 1px solid #BDBDBD; border-radius: 4px; background: white; color: #666; font-weight: bold; } QPushButton:checked { background: %1; color: white; border-color: %1; }").arg(primary));
+    // 4. 확장 카테고리 바 (테마 적용)
+    QString overflowBg = (StyleHelper::currentTheme == StyleHelper::Theme::Default) ? "#F9F9F9" : bgColor;
+    m_overflowWidget->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(overflowBg, borderColor));
+    
+    m_moreBtn->setStyleSheet(QString(
+        "QPushButton { border: 1px solid %1; border-radius: 4px; background: %2; color: #666; font-weight: bold; } "
+        "QPushButton:checked { background: %3; color: white; border-color: %3; }"
+    ).arg(borderColor, bgColor, primary));
 
     updateMiniModeStyle();
     updateCategoryBar();
@@ -495,9 +504,12 @@ void MainWindow::updateCategoryBar() {
 
         connect(btn, &QPushButton::toggled, [this, id](bool c) { m_categoryFilters[id] = c; updateCalendar(); });
         if (count < 3) m_categoryLayout->addWidget(btn);
-        else m_overflowLayout->addWidget(btn, (count - 3) / 5, (count - 3) % 5, Qt::AlignLeft);
+        else m_overflowLayout->addWidget(btn, (count - 3) / 5, (count - 3) % 5, Qt::AlignLeft | Qt::AlignTop);
         count++;
     }
+    // 그리드의 남은 공간을 오른쪽으로 밀어내기 위해 마지막 열 너머에 Stretch 부여
+    m_overflowLayout->setColumnStretch(5, 1);
+    
     if (count > 3) { m_categoryLayout->addWidget(m_moreBtn); m_moreBtn->show(); m_overflowWidget->setVisible(m_isExpanded); }
     else { m_moreBtn->hide(); m_isExpanded = false; m_overflowWidget->hide(); }
     QPushButton* addBtn = new QPushButton("+", this);
