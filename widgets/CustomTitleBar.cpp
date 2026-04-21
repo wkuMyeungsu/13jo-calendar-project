@@ -64,7 +64,7 @@ bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event) {
     auto* btn = qobject_cast<QPushButton*>(watched);
     if (!btn || window()->isMaximized()) return QWidget::eventFilter(watched, event);
 
-    if (event->type() == QEvent::MouseMove) {
+    if (m_isResizable && event->type() == QEvent::MouseMove) {
         auto* me = static_cast<QMouseEvent*>(event);
         QPoint titleBarPos = btn->mapToParent(me->position().toPoint());
         if (titleBarPos.x() > width() - RESIZE_MARGIN && titleBarPos.y() < RESIZE_MARGIN) {
@@ -72,7 +72,7 @@ bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event) {
         } else {
             btn->setCursor(Qt::ArrowCursor);
         }
-    } else if (event->type() == QEvent::MouseButtonPress) {
+    } else if (m_isResizable && event->type() == QEvent::MouseButtonPress) {
         auto* me = static_cast<QMouseEvent*>(event);
         if (me->button() == Qt::LeftButton) {
             QPoint titleBarPos = btn->mapToParent(me->position().toPoint());
@@ -119,7 +119,7 @@ void CustomTitleBar::applyTheme(const QString& bgColor, const QString& textColor
 
 void CustomTitleBar::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
-        if (event->position().x() > width() - RESIZE_MARGIN && event->position().y() < RESIZE_MARGIN && !window()->isMaximized()) {
+        if (m_isResizable && event->position().x() > width() - RESIZE_MARGIN && event->position().y() < RESIZE_MARGIN && !window()->isMaximized()) {
             m_resizing = true;
             m_resizeStartPos = event->globalPosition().toPoint();
             m_resizeStartGeometry = window()->geometry();
@@ -173,7 +173,7 @@ void CustomTitleBar::mouseMoveEvent(QMouseEvent* event) {
     }
 
     // 마우스 커서 변경 로직 (버튼이 눌리지 않았을 때)
-    if (!window()->isMaximized() && event->position().x() > width() - RESIZE_MARGIN && event->position().y() < RESIZE_MARGIN) {
+    if (m_isResizable && !window()->isMaximized() && event->position().x() > width() - RESIZE_MARGIN && event->position().y() < RESIZE_MARGIN) {
         setCursor(Qt::SizeBDiagCursor);
     } else {
         setCursor(Qt::ArrowCursor);

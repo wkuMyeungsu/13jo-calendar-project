@@ -23,6 +23,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     frameLayout->setSpacing(0);
 
     m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar->setResizable(false);
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     frameLayout->addWidget(m_titleBar);
 

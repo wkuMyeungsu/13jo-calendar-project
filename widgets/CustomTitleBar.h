@@ -15,6 +15,7 @@ public:
     void applyTheme(const QString& bgColor, const QString& textColor, const QString& borderColor);
     void updateMaxIcon();
     bool eventFilter(QObject* watched, QEvent* event) override;
+    void setResizable(bool resizable) { m_isResizable = resizable; }
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -32,6 +33,7 @@ private:
     bool   m_dragging = false;
     QPoint m_dragStartPos;
 
+    bool   m_isResizable = true; // 기본값 true로 설정 (MainWindow에서 사용하므로)
     bool   m_resizing = false;
     QPoint m_resizeStartPos;
     QRect  m_resizeStartGeometry;

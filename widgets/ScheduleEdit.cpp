@@ -23,6 +23,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
 
     // 타이틀바 생성 (프레임 내부에 배치)
     m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar->setResizable(false);
     frameLayout->addWidget(m_titleBar);
     
     // 메인 컨텐츠 영역
