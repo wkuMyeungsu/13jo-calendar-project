@@ -20,6 +20,8 @@
 #include <QEasingCurve>
 #include <QPoint>
 #include <QScrollArea>
+#include <QSettings>
+#include <QTime>
 
 /*** 메인윈도우 ***/
 MainWindow::MainWindow(QWidget *parent)
@@ -33,8 +35,12 @@ MainWindow::MainWindow(QWidget *parent)
     , m_isMiniMode(false)
     , m_isPinned(false)
 {
-    ui->setupUi(this);
+    // 1. 저장된 테마 설정 불러오기 (UI 초기화 전 수행)
+    QSettings settings("MyCompany", "CalendarProject");
+    int savedTheme = settings.value("theme", static_cast<int>(StyleHelper::Theme::Default)).toInt();
+    StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(savedTheme);
 
+    ui->setupUi(this);
     setMinimumSize(300, 400);
 
     if (!DatabaseManager::instance().initDatabase("calendar_data.db")) {
@@ -43,64 +49,59 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ── 일반 모드 UI 구성 ──
     m_headerBar = new QWidget(ui->centralwidget);
-    m_headerBar->setStyleSheet("background-color: white; border-bottom: 1px solid #E0E0E0;");
     QHBoxLayout* headerLayout = new QHBoxLayout(m_headerBar);
     headerLayout->setContentsMargins(15, 0, 15, 0);
     headerLayout->setSpacing(0);
 
-    // [좌측 영역] : 카테고리 필터 (공간 확보용)
     QWidget* leftGroup = new QWidget(m_headerBar);
     m_categoryLayout = new QHBoxLayout(leftGroup);
     m_categoryLayout->setContentsMargins(0, 0, 0, 0);
     m_categoryLayout->setSpacing(6);
     m_categoryLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    // [중앙 영역] : 월 표시 및 이동 버튼 (밀착 배치)
     QWidget* centerGroup = new QWidget(m_headerBar);
     QHBoxLayout* centerLayout = new QHBoxLayout(centerGroup);
     centerLayout->setContentsMargins(0, 0, 0, 0);
-    centerLayout->setSpacing(8); // 버튼과 라벨 사이 간격
+    centerLayout->setSpacing(8);
     centerLayout->setAlignment(Qt::AlignCenter);
 
     m_prevBtn = new QPushButton("◀", centerGroup);
     m_prevBtn->setFixedSize(30, 30);
     m_prevBtn->setCursor(Qt::PointingHandCursor);
-    m_prevBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: #4A90E2; }");
 
     m_monthLabel = new QLabel(centerGroup);
-    m_monthLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #222; border: none; background: transparent;");
     m_monthLabel->setAlignment(Qt::AlignCenter);
-    m_monthLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred); // 텍스트 크기에 맞게
 
     m_nextBtn = new QPushButton("▶", centerGroup);
     m_nextBtn->setFixedSize(30, 30);
     m_nextBtn->setCursor(Qt::PointingHandCursor);
-    m_nextBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; color: #555; background: transparent; } QPushButton:hover { color: #4A90E2; }");
 
     centerLayout->addWidget(m_prevBtn);
     centerLayout->addWidget(m_monthLabel);
     centerLayout->addWidget(m_nextBtn);
+// [우측 영역] 오늘 버튼 및 설정 버튼
+QWidget* rightGroup = new QWidget(m_headerBar);
+QHBoxLayout* rightLayout = new QHBoxLayout(rightGroup);
+rightLayout->setContentsMargins(0, 0, 0, 0);
+rightLayout->setSpacing(8);
+rightLayout->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-    // [우측 영역] 오늘 버튼
-    QWidget* rightGroup = new QWidget(m_headerBar);
-    QHBoxLayout* rightLayout = new QHBoxLayout(rightGroup);
-    rightLayout->setContentsMargins(0, 0, 0, 0);
-    rightLayout->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+m_todayBtn = new QPushButton("오늘", rightGroup);
+m_todayBtn->setFixedSize(50, 28);
+m_todayBtn->setCursor(Qt::PointingHandCursor);
 
-    m_todayBtn = new QPushButton("오늘", rightGroup);
-    m_todayBtn->setFixedSize(50, 28);
-    m_todayBtn->setCursor(Qt::PointingHandCursor);
-    m_todayBtn->setStyleSheet("QPushButton { border: 1px solid #DDD; border-radius: 4px; font-size: 12px; color: #555; background: white; } QPushButton:hover { border-color: #4A90E2; color: #4A90E2; }");
-    rightLayout->addWidget(m_todayBtn);
+QPushButton* mainSettingsBtn = new QPushButton("⚙", rightGroup);
+mainSettingsBtn->setFixedSize(32, 28);
+mainSettingsBtn->setCursor(Qt::PointingHandCursor);
+mainSettingsBtn->setObjectName("mainSettingsBtn"); // 스타일 갱신용
+connect(mainSettingsBtn, &QPushButton::clicked, this, &MainWindow::openSettingsWidget);
 
-    // 전체 헤더 배치: 좌우에 동일한 가중치(1)를 주어 중앙 영역이 정중앙에 오도록 보장
-    headerLayout->addWidget(leftGroup, 1);
-    headerLayout->addWidget(centerGroup, 0); // 중앙 그룹은 최소 공간만 차지
-    headerLayout->addWidget(rightGroup, 1);
+rightLayout->addWidget(m_todayBtn);
+rightLayout->addWidget(mainSettingsBtn);
 
-    connect(m_prevBtn, &QPushButton::clicked, this, &MainWindow::prevMonth);
-    connect(m_nextBtn, &QPushButton::clicked, this, &MainWindow::nextMonth);
-    connect(m_todayBtn, &QPushButton::clicked, this, &MainWindow::goToday);
+headerLayout->addWidget(leftGroup, 1);
+headerLayout->addWidget(centerGroup, 0);
+headerLayout->addWidget(rightGroup, 1);
 
     m_overflowWidget = new QWidget(ui->centralwidget);
     m_overflowLayout = new QGridLayout(m_overflowWidget);
@@ -109,7 +110,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_moreBtn = new QPushButton("...", m_headerBar);
     m_moreBtn->setCheckable(true);
     m_moreBtn->setFixedSize(30, 22);
-    connect(m_moreBtn, &QPushButton::clicked, this, &MainWindow::toggleOverflow);
 
     m_container = new QWidget(ui->centralwidget);
     for (int i = 0; i < 3; ++i) {
@@ -117,14 +117,6 @@ MainWindow::MainWindow(QWidget *parent)
         connect(m_months[i], &MonthWidget::dayDoubleClicked, this, &MainWindow::handleDayDoubleClicked);
         connect(m_months[i], &MonthWidget::addRequested, this, &MainWindow::handleDayAddRequested);
     }
-
-    m_scrollTimer = new QTimer(this);
-    m_scrollTimer->setSingleShot(true);
-    connect(m_scrollTimer, &QTimer::timeout, this, &MainWindow::finishScroll);
-
-    m_animation = new QPropertyAnimation(m_container, "pos", this);
-    m_animation->setDuration(300);
-    m_animation->setEasingCurve(QEasingCurve::OutCubic);
 
     // ── 미니 모드 UI 구성 ──
     m_miniWidget = new QWidget(ui->centralwidget);
@@ -137,13 +129,11 @@ MainWindow::MainWindow(QWidget *parent)
     miniTopLayout->setContentsMargins(0, 0, 0, 0);
     miniTopLayout->addStretch(1);
     m_miniTimeLabel = new QLabel(m_miniWidget);
-    m_miniTimeLabel->setAlignment(Qt::AlignCenter);
     miniTopLayout->addWidget(m_miniTimeLabel);
     miniTopLayout->addStretch(1);
     m_pinBtn = new QPushButton("📌", m_miniWidget);
     m_pinBtn->setFixedSize(30, 30);
     m_pinBtn->setCheckable(true);
-    connect(m_pinBtn, &QPushButton::clicked, this, &MainWindow::togglePinned);
     miniTopLayout->addWidget(m_pinBtn);
     miniMainLayout->addWidget(miniTopContainer);
 
@@ -166,51 +156,85 @@ MainWindow::MainWindow(QWidget *parent)
     miniBottomLayout->setSpacing(10);
     QPushButton* settingsBtn = new QPushButton("⚙ 설정", m_miniWidget);
     settingsBtn->setObjectName("miniSettingsBtn");
-    connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::openSettingsWidget);
     QPushButton* backToFull = new QPushButton("캘린더 보기", m_miniWidget);
     backToFull->setObjectName("miniBackBtn");
-    connect(backToFull, &QPushButton::clicked, [this](){ resize(800, 600); });
     miniBottomLayout->addWidget(settingsBtn, 1);
     miniBottomLayout->addWidget(backToFull, 2);
     miniMainLayout->addLayout(miniBottomLayout);
 
     m_miniWidget->hide();
 
+    // ── 타이머 및 애니메이션 ──
+    m_scrollTimer = new QTimer(this);
+    m_scrollTimer->setSingleShot(true);
+    connect(m_scrollTimer, &QTimer::timeout, this, &MainWindow::finishScroll);
+
     m_realTimeTimer = new QTimer(this);
     connect(m_realTimeTimer, &QTimer::timeout, [this]() {
-        if (m_isMiniMode) m_miniTimeLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
+        if (m_isMiniMode && m_miniTimeLabel) m_miniTimeLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
     });
     m_realTimeTimer->start(1000);
 
-    updateMiniModeStyle();
+    m_animation = new QPropertyAnimation(m_container, "pos", this);
+    m_animation->setDuration(300);
+    m_animation->setEasingCurve(QEasingCurve::OutCubic);
+
+    // ── 시그널 연결 ──
+    connect(m_prevBtn, &QPushButton::clicked, this, &MainWindow::prevMonth);
+    connect(m_nextBtn, &QPushButton::clicked, this, &MainWindow::nextMonth);
+    connect(m_todayBtn, &QPushButton::clicked, this, &MainWindow::goToday);
+    connect(m_moreBtn, &QPushButton::clicked, this, &MainWindow::toggleOverflow);
+    connect(m_pinBtn, &QPushButton::clicked, this, &MainWindow::togglePinned);
+    connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::openSettingsWidget);
+    connect(backToFull, &QPushButton::clicked, [this](){ resize(800, 600); });
+
+    updateMainStyle();
     updateCategoryBar();
     updateCalendar();
 }
 
-void MainWindow::updateMiniModeStyle() {
+void MainWindow::updateMainStyle() {
     QString bgColor = StyleHelper::getBgColor();
     QString textColor = StyleHelper::getTextColor();
     QString primary = StyleHelper::getPrimaryColor();
+    bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
 
-    m_miniWidget->setStyleSheet(QString("background-color: %1;").arg(bgColor));
+    // 안정성: 윈도우 스타일 설정
+    this->setStyleSheet(QString("QMainWindow { background-color: %1; }").arg(bgColor));
+    ui->centralwidget->setStyleSheet(QString("#centralwidget { background-color: %1; }").arg(bgColor));
+    m_container->setStyleSheet(QString("background-color: %1;").arg(bgColor));
+    
+    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(bgColor, isDark ? "#333" : "#E0E0E0"));
+    m_monthLabel->setStyleSheet(StyleHelper::getHeaderStyle());
+    
+    QString btnNavStyle = QString("QPushButton { border: none; font-size: 16px; color: %1; background: transparent; } QPushButton:hover { color: %2; }").arg(isDark ? "#AAA" : "#555", primary);
+    m_prevBtn->setStyleSheet(btnNavStyle);
+    m_nextBtn->setStyleSheet(btnNavStyle);
+    m_todayBtn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 4px; font-size: 12px; color: %2; background: %3; } QPushButton:hover { border-color: %4; color: %4; }").arg(isDark ? "#444" : "#DDD", isDark ? "#AAA" : "#555", isDark ? "#2D2D2D" : "white", primary));
+
+    m_overflowWidget->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(isDark ? "#252525" : "#F9F9F9", isDark ? "#333" : "#E0E0E0"));
+    m_moreBtn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 4px; background: %2; color: %3; font-weight: bold; } QPushButton:checked { background: %4; color: white; border-color: %4; }").arg(isDark ? "#444" : "#BDBDBD", isDark ? "#2D2D2D" : "white", isDark ? "#AAA" : "#666", primary));
+
+    // 미니 모드 및 카테고리 버튼들 갱신
+    updateMiniModeStyle();
+    updateCategoryBar();
+}
+
+void MainWindow::updateMiniModeStyle() {
+    if (!m_miniWidget) return;
+
+    QString textColor = StyleHelper::getTextColor();
+    QString primary = StyleHelper::getPrimaryColor();
+    bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
+
+    m_miniWidget->setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
     m_miniTimeLabel->setStyleSheet(QString("font-size: 32px; font-weight: bold; color: %1; font-family: 'Consolas', monospace; background: transparent;").arg(textColor));
     m_miniDateLabel->setStyleSheet(QString("font-size: 16px; font-weight: bold; color: %1; background: transparent;").arg(primary));
     
-    m_pinBtn->setStyleSheet(QString(
-        "QPushButton { border: none; font-size: 16px; background: transparent; } "
-        "QPushButton:checked { background: %1; border-radius: 15px; }"
-    ).arg(StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#444" : "#E3F2FD"));
+    m_pinBtn->setStyleSheet(QString("QPushButton { border: none; font-size: 16px; background: transparent; } QPushButton:checked { background: %1; border-radius: 15px; }").arg(isDark ? "#444" : "#E3F2FD"));
 
-    m_miniWidget->findChild<QWidget*>("miniScrollContent")->setStyleSheet("background: transparent;");
-
-    QPushButton* settingsBtn = m_miniWidget->findChild<QPushButton*>("miniSettingsBtn");
-    if (settingsBtn) settingsBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
-
-    QPushButton* backToFull = m_miniWidget->findChild<QPushButton*>("miniBackBtn");
-    if (backToFull) backToFull->setStyleSheet(StyleHelper::getBtnSaveStyle());
-
-    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(bgColor, StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#333" : "#E0E0E0"));
-    m_monthLabel->setStyleSheet(QString("font-size: 18px; font-weight: bold; color: %1; border: none; background: transparent;").arg(textColor));
+    if (QPushButton* sBtn = m_miniWidget->findChild<QPushButton*>("miniSettingsBtn")) sBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
+    if (QPushButton* bBtn = m_miniWidget->findChild<QPushButton*>("miniBackBtn")) bBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
 }
 
 void MainWindow::setMiniMode(bool mini) {
@@ -219,14 +243,11 @@ void MainWindow::setMiniMode(bool mini) {
 
     if (m_isMiniMode) {
         updateMiniModeStyle();
-        m_headerBar->hide();
-        m_overflowWidget->hide();
-        m_container->hide();
+        m_headerBar->hide(); m_overflowWidget->hide(); m_container->hide();
         m_miniWidget->show();
         
         QDate today = QDate::currentDate();
         m_miniDateLabel->setText(today.toString("yyyy년 MM월 dd일 dddd"));
-        m_miniTimeLabel->setText(QTime::currentTime().toString("HH:mm:ss"));
         
         QLayoutItem *item;
         while ((item = m_miniScheduleLayout->takeAt(0)) != nullptr) {
@@ -235,6 +256,8 @@ void MainWindow::setMiniMode(bool mini) {
         }
 
         auto schedules = DatabaseManager::instance().getSchedulesForDay(today);
+        bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
+        
         if (schedules.isEmpty()) {
             QLabel* empty = new QLabel("오늘 일정이 없습니다.", m_miniWidget);
             empty->setStyleSheet(QString("color: #999; font-style: italic; padding: 20px; background: transparent;"));
@@ -244,12 +267,9 @@ void MainWindow::setMiniMode(bool mini) {
             for (const auto& s : schedules) {
                 QWidget* itemWidget = new QWidget(m_miniWidget);
                 itemWidget->setObjectName("itemWidget");
-                QString colorStr = s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString();
-                itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
-
+                itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString()));
                 QHBoxLayout* itemLayout = new QHBoxLayout(itemWidget);
-                itemLayout->setContentsMargins(15, 12, 15, 12);
-                itemLayout->setSpacing(10);
+                itemLayout->setContentsMargins(15, 12, 15, 12); itemLayout->setSpacing(10);
 
                 QLabel* titleLabel = new QLabel(s["title"].toString(), itemWidget);
                 titleLabel->setStyleSheet(QString("font-weight: bold; font-size: 13px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
@@ -257,25 +277,30 @@ void MainWindow::setMiniMode(bool mini) {
 
                 QString startStr = s["start"].toString().mid(11, 5);
                 QString endStr = s["end"].toString().mid(11, 5);
-                bool isAllDay = (s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00");
-
-                if (!isAllDay) {
+                if (!((s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00"))) {
                     QLabel* timeLabel = new QLabel(QString("%1~%2").arg(startStr, endStr), itemWidget);
-                    timeLabel->setStyleSheet(QString("color: %1; font-size: 11px; border: none; background: transparent;").arg(StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#AAA" : "#888"));
-                    timeLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                    timeLabel->setStyleSheet(QString("color: %1; font-size: 11px; border: none; background: transparent;").arg(isDark ? "#AAA" : "#888"));
                     itemLayout->addWidget(timeLabel);
-                } else {
-                    itemLayout->addStretch(0);
                 }
                 m_miniScheduleLayout->addWidget(itemWidget);
             }
         }
     } else {
-        m_miniWidget->hide();
-        m_headerBar->show();
-        m_container->show();
+        m_miniWidget->hide(); m_headerBar->show(); m_container->show();
+        updateMainStyle();
         updateLayoutPositions();
     }
+}
+
+void MainWindow::openSettingsWidget() {
+    SettingsWidget *settings = new SettingsWidget();
+    settings->setAttribute(Qt::WA_DeleteOnClose);
+    settings->setWindowModality(Qt::ApplicationModal);
+    connect(settings, &SettingsWidget::settingsChanged, this, [this]() {
+        updateMainStyle();
+        updateCalendar();
+    });
+    settings->show();
 }
 
 void MainWindow::togglePinned() {
@@ -287,37 +312,17 @@ void MainWindow::togglePinned() {
     this->show();
 }
 
-void MainWindow::openSettingsWidget() {
-    SettingsWidget *settings = new SettingsWidget();
-    settings->setAttribute(Qt::WA_DeleteOnClose);
-    settings->setWindowModality(Qt::ApplicationModal);
-    connect(settings, &SettingsWidget::settingsChanged, this, [this]() {
-        updateMiniModeStyle();
-        updateCategoryBar();
-        updateCalendar();
-    });
-    settings->show();
-}
-
 void MainWindow::resizeEvent(QResizeEvent* event) {
-    int w = event->size().width();
-    if (w < 600) {
-        setMiniMode(true);
-        if (m_miniWidget) m_miniWidget->setGeometry(ui->centralwidget->rect());
-    } else {
-        setMiniMode(false);
-        updateLayoutPositions();
-    }
+    if (event->size().width() < 600) setMiniMode(true);
+    else setMiniMode(false);
+    if (m_isMiniMode && m_miniWidget) m_miniWidget->setGeometry(ui->centralwidget->rect());
+    else updateLayoutPositions();
     QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::updateLayoutPositions() {
-    if (m_isMiniMode) {
-        m_miniWidget->setGeometry(ui->centralwidget->rect());
-        return;
-    }
-    int w = ui->centralwidget->width();
-    if (w <= 0) return;
+    if (m_isMiniMode) return;
+    int w = ui->centralwidget->width(); if (w <= 0) return;
 
     m_headerBar->setGeometry(0, 0, w, kBaseHeaderH);
     m_headerBar->raise();
@@ -331,10 +336,7 @@ void MainWindow::updateLayoutPositions() {
         m_overflowWidget->setGeometry(0, kBaseHeaderH, w, overflowH);
         m_overflowWidget->raise();
         m_currentHeaderH = kBaseHeaderH + overflowH;
-    } else {
-        m_overflowWidget->hide();
-        m_currentHeaderH = kBaseHeaderH;
-    }
+    } else { m_overflowWidget->hide(); m_currentHeaderH = kBaseHeaderH; }
 
     int h = ui->centralwidget->height() - m_currentHeaderH;
     m_container->resize(w * 3, h);
@@ -435,12 +437,15 @@ void MainWindow::updateCategoryBar() {
     }
     auto categories = DatabaseManager::instance().getCategories();
     int count = 0;
+    QString bgColor = StyleHelper::getBgColor();
+    bool isDark = (StyleHelper::currentTheme == StyleHelper::Theme::Dark);
+
     for (const auto& cat : categories) {
         int id = cat["id"].toInt();
         if (!m_categoryFilters.contains(id)) m_categoryFilters[id] = true;
         QPushButton* btn = new QPushButton(cat["name"].toString(), this);
         btn->setCheckable(true); btn->setChecked(m_categoryFilters[id]); btn->setFixedHeight(22);
-        btn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 10px; padding: 0px 12px; font-size: 11px; color: %1; background: white; font-weight: bold; } QPushButton:checked { background-color: %1; color: white; }").arg(cat["color"].toString()));
+        btn->setStyleSheet(QString("QPushButton { border: 1px solid %1; border-radius: 10px; padding: 0px 12px; font-size: 11px; color: %1; background: %2; font-weight: bold; } QPushButton:checked { background-color: %1; color: white; }").arg(cat["color"].toString(), bgColor));
         connect(btn, &QPushButton::toggled, [this, id](bool c) { m_categoryFilters[id] = c; updateCalendar(); });
         if (count < 3) m_categoryLayout->addWidget(btn);
         else m_overflowLayout->addWidget(btn, (count - 3) / 5, (count - 3) % 5, Qt::AlignLeft);
@@ -448,11 +453,14 @@ void MainWindow::updateCategoryBar() {
     }
     if (count > 3) { m_categoryLayout->addWidget(m_moreBtn); m_moreBtn->show(); m_overflowWidget->setVisible(m_isExpanded); }
     else { m_moreBtn->hide(); m_isExpanded = false; m_overflowWidget->hide(); }
+    
     QPushButton* addBtn = new QPushButton("+", this);
-    addBtn->setFixedSize(22, 22); addBtn->setStyleSheet("QPushButton { border: 1px solid #E0E0E0; border-radius: 11px; background-color: #F5F5F5; color: #757575; font-size: 16px; font-weight: bold; } QPushButton:hover { background-color: #4A90E2; color: white; }");
+    addBtn->setFixedSize(22, 22); addBtn->setStyleSheet(QString(
+        "QPushButton { border: 1px solid %1; border-radius: 11px; background-color: %2; color: %3; font-size: 16px; font-weight: bold; } "
+        "QPushButton:hover { background-color: %4; color: white; }"
+    ).arg(isDark ? "#444" : "#E0E0E0", bgColor, isDark ? "#AAA" : "#757575", StyleHelper::getPrimaryColor()));
     connect(addBtn, &QPushButton::clicked, this, &MainWindow::openCategoryManager);
     m_categoryLayout->addWidget(addBtn);
-    updateLayoutPositions();
 }
 
 void MainWindow::toggleOverflow() {

@@ -50,7 +50,8 @@ private slots:
 
 private:
     void updateLayoutPositions(); 
-    void updateMiniModeStyle(); // 미니 모드 테마 스타일 갱신
+    void updateMiniModeStyle(); 
+    void updateMainStyle(); // 일반 모드 테마 스타일 갱신
 
     static constexpr int kBaseHeaderH = 52;
     int m_currentHeaderH;

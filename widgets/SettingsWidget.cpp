@@ -5,11 +5,15 @@
 #include <QFormLayout>
 #include <QLabel>
 #include <QMessageBox>
+#include <QSettings>
 
 SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     setWindowTitle("설정");
-    setFixedSize(StyleHelper::WIDGET_WIDTH, 260); // 높이 조정
+    setFixedSize(StyleHelper::WIDGET_WIDTH, 260);
     setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
+
+    // QSettings 초기화 (조직명, 앱이름을 기반으로 경로 자동 지정)
+    QSettings settings("MyCompany", "CalendarProject");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
@@ -29,8 +33,10 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     m_themeCombo->addItem("소프트 파스텔", static_cast<int>(StyleHelper::Theme::Soft));
     m_themeCombo->addItem("딥 블루", static_cast<int>(StyleHelper::Theme::DeepBlue));
     
-    // 현재 테마 인덱스 설정
-    m_themeCombo->setCurrentIndex(static_cast<int>(StyleHelper::currentTheme));
+    // 저장된 테마 불러오기 (기본값 Default)
+    int savedTheme = settings.value("theme", static_cast<int>(StyleHelper::Theme::Default)).toInt();
+    StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(savedTheme);
+    m_themeCombo->setCurrentIndex(m_themeCombo->findData(savedTheme));
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
 
     auto createLabel = [&](const QString& text) {
@@ -62,6 +68,20 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     connect(m_themeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsWidget::previewTheme);
 }
 
+void SettingsWidget::applySettings() {
+    // 1. 전역 변수 업데이트
+    int selectedThemeIdx = m_themeCombo->currentData().toInt();
+    StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(selectedThemeIdx);
+    
+    // 2. QSettings를 사용하여 파일에 영구 저장
+    QSettings settings("MyCompany", "CalendarProject");
+    settings.setValue("theme", selectedThemeIdx);
+    
+    emit settingsChanged();
+    QMessageBox::information(this, "알림", "설정이 저장되었습니다.");
+    this->close();
+}
+
 void SettingsWidget::handleReset() {
     auto reply = QMessageBox::critical(this, "위험: 전체 초기화", 
         "모든 일정과 카테고리가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?",
@@ -89,7 +109,7 @@ void SettingsWidget::previewTheme(int index) {
 void SettingsWidget::updateFormStyle() {
     this->setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
     
-    // 헤더 및 라벨 스타일 갱신 (자식 위젯들을 찾아서 적용)
+    // 헤더 및 라벨 스타일 갱신
     QList<QLabel*> labels = this->findChildren<QLabel*>();
     for (QLabel* label : labels) {
         if (label->text() == "시스템 설정") {
@@ -102,13 +122,4 @@ void SettingsWidget::updateFormStyle() {
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
     m_applyBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
     m_resetBtn->setStyleSheet(StyleHelper::getBtnDeleteStyle());
-}
-
-void SettingsWidget::applySettings() {
-    // 테마 변경 확정
-    StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(m_themeCombo->currentData().toInt());
-    
-    emit settingsChanged();
-    QMessageBox::information(this, "알림", "설정이 적용되었습니다.");
-    this->close();
 }
