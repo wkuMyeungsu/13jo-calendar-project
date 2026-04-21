@@ -39,8 +39,8 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
     m_selectedColor = "#4A90E2";
     m_colorBtn = new QPushButton(this);
     m_colorBtn->setCursor(Qt::PointingHandCursor);
-    m_colorBtn->setFixedSize(36, 36);
-    m_colorBtn->setStyleSheet(QString("background-color: %1; border-radius: 18px; border: 2px solid white; outline: 1px solid #DDD;").arg(m_selectedColor));
+    m_colorBtn->setFixedSize(UiConstants::COLOR_BTN_SIZE, UiConstants::COLOR_BTN_SIZE);
+    m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
 
     editLayout->addWidget(m_nameInput, 1);
     editLayout->addWidget(m_colorBtn);
@@ -108,7 +108,7 @@ void CategoryModifyWidget::selectColor() {
 
     connect(popup, &ColorPickerPopup::colorSelected, this, [this](const QString& color) {
         m_selectedColor = color;
-        m_colorBtn->setStyleSheet(QString("background-color: %1; border-radius: 18px; border: 2px solid white; outline: 1px solid #DDD;").arg(m_selectedColor));
+        m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
     });
 
     popup->show();
@@ -120,7 +120,7 @@ void CategoryModifyWidget::onItemSelected(QListWidgetItem *item) {
     m_currentEditingId = item->data(Qt::UserRole).toInt();
     m_nameInput->setText(item->text());
     m_selectedColor = item->data(Qt::UserRole + 1).toString();
-    m_colorBtn->setStyleSheet(QString("background-color: %1; border-radius: 18px; border: 2px solid white; outline: 1px solid #DDD;").arg(m_selectedColor));
+    m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
     
     m_editBtn->setEnabled(true);
     m_deleteBtn->setEnabled(true);

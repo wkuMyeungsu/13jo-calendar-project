@@ -10,14 +10,15 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     QSettings settings("MyCompany", "CalendarProject");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
-    mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
+    mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
+    mainLayout->setSpacing(UiConstants::LAYOUT_SPACING);
 
     QLabel *headerLabel = new QLabel("시스템 설정", this);
     headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
     QFormLayout *formLayout = new QFormLayout();
+    formLayout->setVerticalSpacing(UiConstants::FORM_VERTICAL_SPACING);
     formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     // 테마 선택 콤보박스

@@ -91,7 +91,7 @@ void ScheduleInputWidget::selectColor() {
 
     connect(picker, &ColorPickerPopup::colorSelected, this, [this](const QString& color) {
         m_selectedColor = color;
-        colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold; border-radius: 6px; border: none;").arg(m_selectedColor));
+        colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
     });
 
     picker->show();

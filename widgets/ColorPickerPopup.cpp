@@ -19,17 +19,16 @@ ColorPickerPopup::ColorPickerPopup(QWidget *parent) : QWidget(parent) {
 void ColorPickerPopup::setupUI() {
     // 내부 컨테이너 위젯 (여기에 실제 배경과 테두리를 입힘)
     QWidget *container = new QWidget(this);
-    container->setStyleSheet(QString(
-        "QWidget { background-color: %1; border: 1px solid #DDD; border-radius: 12px; }"
-    ).arg(StyleHelper::getBgColor()));
+    container->setObjectName("container");
+    container->setStyleSheet(StyleHelper::getDialogStyle());
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->addWidget(container);
 
     QGridLayout *gridLayout = new QGridLayout(container);
-    gridLayout->setContentsMargins(12, 12, 12, 12);
-    gridLayout->setSpacing(8);
+    gridLayout->setContentsMargins(UiConstants::LAYOUT_SPACING, UiConstants::LAYOUT_SPACING, UiConstants::LAYOUT_SPACING, UiConstants::LAYOUT_SPACING);
+    gridLayout->setSpacing(UiConstants::BTN_LAYOUT_SPACING);
 
     const int columns = 5;
     for (int i = 0; i < m_colors.size(); ++i) {
@@ -39,10 +38,7 @@ void ColorPickerPopup::setupUI() {
         btn->setCursor(Qt::PointingHandCursor);
         btn->setProperty("colorValue", color); // 클릭 시 어떤 색상인지 식별용
         
-        btn->setStyleSheet(QString(
-            "QPushButton { background-color: %1; border-radius: 14px; border: 2px solid white; outline: none; }"
-            "QPushButton:hover { border: 2px solid #999; }"
-        ).arg(color));
+        btn->setStyleSheet(StyleHelper::getCircleButtonStyle(color, 28));
 
         connect(btn, &QPushButton::clicked, this, &ColorPickerPopup::handleColorClick);
         gridLayout->addWidget(btn, i / columns, i % columns);

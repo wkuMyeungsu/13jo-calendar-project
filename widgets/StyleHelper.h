@@ -140,6 +140,19 @@ namespace StyleHelper {
                "QPushButton:hover { background-color: #E24A4A; color: white; border-color: #E24A4A; }";
     }
 
+    // ── 원형 색상 선택 버튼 스타일 ──
+    inline QString getCircleButtonStyle(const QString& color, int size = 32) {
+        return QString(
+            "QPushButton { background-color: %1; border-radius: %2px; border: 2px solid white; outline: 1px solid #DDD; }"
+            "QPushButton:hover { border: 2px solid #999; }"
+        ).arg(color).arg(size / 2);
+    }
+
+    // ── 다이얼로그 컨테이너 스타일 ──
+    inline QString getDialogStyle() {
+        return QString("QWidget#container { background-color: %1; border: 1px solid #DDD; border-radius: 12px; }").arg(getBgColor());
+    }
+
     inline QString getItemBaseStyle(const QString& catColor) {
         QString border = (currentTheme == Theme::DeepBlue ? "#D2E3FC" : "#EEE");
         return QString("#itemWidget { background-color: white; border-left: 5px solid %1; border-radius: 6px; border-top: 1px solid %2; border-right: 1px solid %2; border-bottom: 1px solid %2; }").arg(catColor, border);

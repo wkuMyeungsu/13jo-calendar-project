@@ -12,6 +12,15 @@ namespace UiConstants {
     static constexpr int RESIZE_MARGIN = 10;
     static constexpr int SIZE_GRIP_SIZE = 16;
 
+    // Corner Radii
+    static constexpr int CORNER_RADIUS_BIG = 12;
+    static constexpr int CORNER_RADIUS_MEDIUM = 8;
+    static constexpr int CORNER_RADIUS_SMALL = 4;
+
+    // Specific Widget Sizes
+    static constexpr int COLOR_BTN_SIZE = 32;
+    static constexpr int POPUP_SHADOW_BLUR = 15;
+
     // Layout Constants
     static constexpr int CONTENT_MARGIN = 20;
     static constexpr int LAYOUT_SPACING = 15;
