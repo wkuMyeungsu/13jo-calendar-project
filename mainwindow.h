@@ -42,6 +42,7 @@ private slots:
     void prevMonth();
     void nextMonth();
     void goToday();
+    void slideMonth(int direction);
 
 private:
     static constexpr int kHeaderH = 52;
