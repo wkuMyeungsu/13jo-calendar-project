@@ -36,6 +36,7 @@ public:    static DatabaseManager& instance();
     QList<QVariantMap> getCategories();
     bool updateCategory(int id, const QString& name, const QString& color);
     bool deleteCategory(int id);
+    bool resetDatabase(); // 모든 일정 및 카테고리 삭제
 
 private:
     DatabaseManager() = default;

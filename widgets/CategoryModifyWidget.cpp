@@ -11,7 +11,7 @@
 CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m_currentEditingId(-1) {
     setWindowTitle("카테고리 설정");
     setFixedSize(StyleHelper::WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
-    setStyleSheet("background-color: white;");
+    setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
@@ -19,21 +19,21 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
 
     // 1. 상단 제목
     QLabel *headerLabel = new QLabel("카테고리 관리", this);
-    headerLabel->setStyleSheet(StyleHelper::HEADER_STYLE);
+    headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
     // 2. 카테고리 목록 섹션
     QLabel *listLabel = new QLabel("현재 카테고리 (클릭 시 수정)", this);
-    listLabel->setStyleSheet(StyleHelper::FORM_LABEL_STYLE);
+    listLabel->setStyleSheet(StyleHelper::getFormLabelStyle());
     mainLayout->addWidget(listLabel);
 
     m_listWidget = new QListWidget(this);
     m_listWidget->setSpacing(8);
-    m_listWidget->setStyleSheet(StyleHelper::LIST_WIDGET_STYLE);
+    m_listWidget->setStyleSheet(StyleHelper::getListWidgetStyle() + StyleHelper::getScrollbarStyle());
     mainLayout->addWidget(m_listWidget);
 
     // 3. 입력 필드 섹션
-    QString inputStyle = StyleHelper::COMMON_INPUT_STYLE;
+    QString inputStyle = StyleHelper::getCommonInputStyle();
 
     QHBoxLayout *editLayout = new QHBoxLayout();
     editLayout->setSpacing(10);
@@ -58,16 +58,16 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
 
     m_addBtn = new QPushButton("신규 추가", this);
     m_addBtn->setCursor(Qt::PointingHandCursor);
-    m_addBtn->setStyleSheet(StyleHelper::BTN_SAVE_STYLE);
+    m_addBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
     
     m_editBtn = new QPushButton("변경 저장", this);
     m_editBtn->setCursor(Qt::PointingHandCursor);
-    m_editBtn->setStyleSheet(StyleHelper::BTN_MODIFY_STYLE);
+    m_editBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
     m_editBtn->setEnabled(false);
 
     m_deleteBtn = new QPushButton("삭제", this);
     m_deleteBtn->setCursor(Qt::PointingHandCursor);
-    m_deleteBtn->setStyleSheet(StyleHelper::BTN_DELETE_STYLE);
+    m_deleteBtn->setStyleSheet(StyleHelper::getBtnDeleteStyle());
     m_deleteBtn->setEnabled(false);
 
     btnLayout->addWidget(m_addBtn);

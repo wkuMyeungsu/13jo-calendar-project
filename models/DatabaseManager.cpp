@@ -187,3 +187,20 @@ bool DatabaseManager::deleteCategory(int id) {
     query.bindValue(":id", id);
     return query.exec();
 }
+
+bool DatabaseManager::resetDatabase() {
+    QSqlQuery query;
+    // 모든 일정 삭제
+    if (!query.exec("DELETE FROM schedules")) return false;
+    // 모든 카테고리 삭제
+    if (!query.exec("DELETE FROM categories")) return false;
+    // 시퀀스 초기화 (ID 1부터 다시 시작하게 함)
+    query.exec("DELETE FROM sqlite_sequence WHERE name='schedules' OR name='categories'");
+
+    // 기본 카테고리 재생성
+    addCategory("Work", "#4A90E2");
+    addCategory("Personal", "#4CAF50");
+    addCategory("Other", "#9E9E9E");
+
+    return true;
+}
