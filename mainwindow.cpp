@@ -356,37 +356,6 @@ void MainWindow::finishScroll() {
     else if (m_xOffset < -threshold) direction = 1;
 
     slideMonth(direction);
-
-    // int targetX;
-    // if (m_xOffset > threshold) {
-    //     targetX = 0;
-    // } else if (m_xOffset < -threshold) {
-    //     targetX = -2 * w;
-    // } else {
-    //     targetX = -w;
-    // }
-
-    // m_animation->setStartValue(m_container->pos());
-    // m_animation->setEndValue(QPoint(targetX, m_currentHeaderH));
-    // connect(m_animation, &QPropertyAnimation::finished, [this, targetX, w]() {
-    //     m_animation->disconnect(SIGNAL(finished()));
-    //     if (targetX == 0) {
-    //         m_currentMonth--;
-    //         if (m_currentMonth < 1) {
-    //             m_currentMonth = 12;
-    //             m_currentYear--;
-    //         }
-    //     }
-    //     else if (targetX == -2 * w) {
-    //         m_currentMonth++;
-    //         if (m_currentMonth > 12) {
-    //             m_currentMonth = 1; m_currentYear++;
-    //         }
-    //     }
-    //     m_xOffset = 0;
-    //     updateCalendar(); // 데이터 갱신 및 컨테이너 위치(-w) 복구
-    // });
-    // m_animation->start();
 }
 
 /*** slideMonth(int direction) : 이전/다음 달로 슬라이딩 이동 처리 ***/
