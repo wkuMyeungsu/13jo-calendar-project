@@ -39,6 +39,13 @@ MonthWidget::MonthWidget(QWidget* parent) : QWidget(parent) {
         m_cells.append(cell);
 
         // 시그널 연결 (한 번만 수행)
+        connect(cell, &DayCell::dayClicked, this, [this, cell](const QDate& date) {
+            // 모든 셀의 선택 해제
+            for (DayCell* c : m_cells) {
+                c->setSelected(false);
+            }
+            cell->setSelected(true);
+        });
         connect(cell, &DayCell::dayDoubleClicked, this, &MonthWidget::dayDoubleClicked);
         connect(cell, &DayCell::addRequested,     this, &MonthWidget::addRequested);
 

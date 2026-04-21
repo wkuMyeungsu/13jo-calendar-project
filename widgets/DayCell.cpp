@@ -2,9 +2,9 @@
 #include <QVBoxLayout>
 #include <QMouseEvent>
 #include <QResizeEvent>
-#include <QGraphicsOpacityEffect>
 #include <QDateTime>
 #include <QColor>
+#include <QGraphicsOpacityEffect>
 
 DayCell::DayCell(QWidget* parent) 
     : QFrame(parent)
@@ -18,7 +18,7 @@ DayCell::DayCell(QWidget* parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
-    // [1] Date Header 영역 (22px 고정)
+    // [1] Date Header 영역
     m_dateLabel = new QLabel(this);
     m_dateLabel->setFixedHeight(UiConstants::DATE_HEADER_HEIGHT);
     m_dateLabel->setStyleSheet("font-weight: bold; border: none; background: transparent;");
@@ -45,37 +45,53 @@ DayCell::DayCell(QWidget* parent)
     // [5] 하단 완충 여백
     mainLayout->addStretch(1);
 
-    // [6] 플러스 버튼
-    m_plusButton = new QPushButton("+", this);
-    m_plusButton->setFixedSize(UiConstants::PLUS_BTN_SIZE, UiConstants::PLUS_BTN_SIZE);
-    m_plusButton->setCursor(Qt::PointingHandCursor);
-    m_plusButton->setStyleSheet(
-        QString("QPushButton { border: none; background-color: #4A90E2; color: white; border-radius: %1px; font-size: 16px; font-weight: bold; }").arg(UiConstants::PLUS_BTN_SIZE / 2) +
-        "QPushButton:hover { background-color: #357ABD; }"
-    );
+    // [6] 호버 힌트 라벨 (+) - 생성 시에는 기본 속성만 설정
+    m_hoverHintLabel = new QLabel("+", this);
+    m_hoverHintLabel->setAlignment(Qt::AlignCenter);
+    m_hoverHintLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_hoverHintLabel->setFixedSize(40, 40);
     
-    m_plusOpacity = new QGraphicsOpacityEffect(m_plusButton);
-    m_plusOpacity->setOpacity(0.0);
-    m_plusButton->setGraphicsEffect(m_plusOpacity);
-    m_plusAnim = new QPropertyAnimation(m_plusOpacity, "opacity", this);
+    m_hintOpacity = new QGraphicsOpacityEffect(m_hoverHintLabel);
+    m_hintOpacity->setOpacity(0.0);
+    m_hoverHintLabel->setGraphicsEffect(m_hintOpacity);
+    
+    m_hintAnim = new QPropertyAnimation(m_hintOpacity, "opacity", this);
+    m_hintAnim->setDuration(150);
 
-    connect(m_plusButton, &QPushButton::clicked, [this]() { emit addRequested(m_date); });
     updateStyle();
 }
 
 void DayCell::updateStyle() {
+    QString primary = StyleHelper::getPrimaryColor();
     QString border = QString("0.5px solid %1").arg(UiConstants::COLOR_BORDER_DEFAULT);
     QString bgColor = "white";
 
-    if (m_isToday) {
-        border = "2px solid #FF9800"; // 오늘 날짜 굵은 주황색 선
+    // 1. 선택 및 오늘 하이라이트 경계선 결정
+    if (m_isSelected) {
+        border = QString("2px solid %1").arg(primary);
+    } else if (m_isToday) {
+        border = "2px solid #FF9800";
     }
 
+    // 2. 호버 배경색 결정
     if (m_isHovered) {
-        bgColor = StyleHelper::getDayCellHoverBg(); // 호버 시 테마별 배경색
+        bgColor = StyleHelper::getDayCellHoverBg();
     }
 
+    // 3. 메인 컨테이너 스타일 적용
     setStyleSheet(QString("DayCell { border: %1; background-color: %2; }").arg(border, bgColor));
+
+    // 4. [+] 기호 색상 테마 동기화 (핵심 수정 사항)
+    m_hoverHintLabel->setStyleSheet(
+        QString("font-size: 32px; font-weight: bold; color: %1; background: transparent;").arg(primary)
+    );
+}
+
+void DayCell::setSelected(bool select) {
+    if (m_isSelected != select) {
+        m_isSelected = select;
+        updateStyle();
+    }
 }
 
 void DayCell::setStage(const SafeZoneStage& stage) {
@@ -94,7 +110,6 @@ void DayCell::setDate(const QDate& date) {
     if (m_isToday) {
         m_dateLabel->setMinimumWidth(0); m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
         m_dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        // 배경색과 원형 효과 제거, 대신 텍스트를 주황색으로 강조 (선택 사항, 필요 없으면 검정색으로 유지 가능)
         m_dateLabel->setStyleSheet("font-weight: bold; color: #FF9800; border: none; background: transparent; padding-left: 8px;");
     } else {
         m_dateLabel->setMinimumWidth(0); m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
@@ -136,27 +151,27 @@ static QLabel* createScheduleBar(const QVariantMap& data, const QDate& cellDate,
 void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
     m_currentSchedules = schedules;
     QLayoutItem* child;
-    while ((child = m_scheduleLayout->takeAt(0)) != nullptr) { if (child->widget()) delete child->widget(); delete child; }
+    while ((child = m_scheduleLayout->takeAt(0)) != nullptr) { 
+        if (child->widget()) child->widget()->deleteLater(); 
+        delete child; 
+    }
 
     int displayLimit = m_stage.maxSlots;
-    int totalRealCount = 0;
-    for (const auto& s : schedules) if (!s.isEmpty() && !s.contains("_is_bar_spacer")) totalRealCount++;
-
     for (int i = 0; i < displayLimit; ++i) {
         if (i < schedules.size()) {
             const QVariantMap& s = schedules[i];
             if (s.isEmpty() || s.contains("_is_bar_spacer")) {
-                QWidget* sp = new QWidget(this); sp->setFixedHeight(m_stage.slotHeight);
-                m_scheduleLayout->addWidget(sp);
+                m_scheduleLayout->addSpacing(m_stage.slotHeight);
             } else {
                 m_scheduleLayout->addWidget(createScheduleBar(s, m_date, m_stage, this));
             }
         } else {
-            QWidget* sp = new QWidget(this); sp->setFixedHeight(m_stage.slotHeight);
-            m_scheduleLayout->addWidget(sp);
+            m_scheduleLayout->addSpacing(m_stage.slotHeight);
         }
     }
 
+    int totalRealCount = 0;
+    for (const auto& s : schedules) if (!s.isEmpty() && !s.contains("_is_bar_spacer")) totalRealCount++;
     int visibleRealInGrid = 0;
     for (int i = 0; i < displayLimit; ++i) {
         if (i < schedules.size() && !schedules[i].isEmpty() && !schedules[i].contains("_is_bar_spacer"))
@@ -171,39 +186,69 @@ void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
     }
 }
 
-void DayCell::updatePlusButtonPos() {
-    m_plusButton->move(width() - (UiConstants::PLUS_BTN_SIZE + 4), height() - (UiConstants::PLUS_BTN_SIZE + 4));
-    m_plusButton->raise();
+void DayCell::updateHoverHintPos() {
+    m_hoverHintLabel->move((width() - m_hoverHintLabel->width()) / 2, (height() - m_hoverHintLabel->height()) / 2);
 }
 
 void DayCell::resizeEvent(QResizeEvent* e) {
     QFrame::resizeEvent(e);
-    updatePlusButtonPos();
+    updateHoverHintPos();
 }
 
 void DayCell::enterEvent(QEnterEvent* e) {
     m_isHovered = true;
     updateStyle();
-    m_plusButton->raise();
-    m_plusAnim->stop();
-    m_plusAnim->setStartValue(m_plusOpacity->opacity());
-    m_plusAnim->setEndValue(1.0);
-    m_plusAnim->setDuration(150);
-    m_plusAnim->start();
+
+    bool hasSchedules = false;
+    for (const auto& s : m_currentSchedules) {
+        if (!s.isEmpty() && !s.contains("_is_bar_spacer")) {
+            hasSchedules = true; break;
+        }
+    }
+
+    if (!hasSchedules) {
+        m_hoverHintLabel->raise();
+        m_hintAnim->stop();
+        m_hintAnim->setStartValue(m_hintOpacity->opacity());
+        m_hintAnim->setEndValue(1.0);
+        m_hintAnim->start();
+    }
+
     QFrame::enterEvent(e);
 }
 
 void DayCell::leaveEvent(QEvent* e) {
     m_isHovered = false;
     updateStyle();
-    m_plusAnim->stop();
-    m_plusAnim->setStartValue(m_plusOpacity->opacity());
-    m_plusAnim->setEndValue(0.0);
-    m_plusAnim->setDuration(150);
-    m_plusAnim->start();
+
+    m_hintAnim->stop();
+    m_hintAnim->setStartValue(m_hintOpacity->opacity());
+    m_hintAnim->setEndValue(0.0);
+    m_hintAnim->start();
+
     QFrame::leaveEvent(e);
 }
 
+void DayCell::mousePressEvent(QMouseEvent* e) {
+    if (e->button() == Qt::LeftButton) {
+        emit dayClicked(m_date);
+    }
+    QFrame::mousePressEvent(e);
+}
+
 void DayCell::mouseDoubleClickEvent(QMouseEvent* e) {
-    if (e->button() == Qt::LeftButton) emit dayDoubleClicked(m_date);
+    if (e->button() == Qt::LeftButton) {
+        bool hasSchedules = false;
+        for (const auto& s : m_currentSchedules) {
+            if (!s.isEmpty() && !s.contains("_is_bar_spacer")) {
+                hasSchedules = true; break;
+            }
+        }
+        
+        if (!hasSchedules) {
+            emit addRequested(m_date);
+        } else {
+            emit dayDoubleClicked(m_date);
+        }
+    }
 }
