@@ -592,11 +592,17 @@ void MainWindow::updateCategoryBar() {
 
         btn->setCheckable(true);
         btn->setChecked(m_categoryFilters[id]);
-        btn->setFixedHeight(22);
-        btn->setStyleSheet(
-            QString("QPushButton { border: 1px solid %1; border-radius: 10px; padding: 0px 12px; font-size: 11px; color: %1; background: %2; font-weight: bold; } QPushButton:checked { background-color: %1; color: white; }").arg(cat["color"].toString(), bgColor));
+        btn->setFixedHeight(24);
+        btn->setStyleSheet(StyleHelper::getCategoryPillStyle(cat["color"].toString(), m_categoryFilters[id]));
 
-        connect(btn, &QPushButton::toggled, [this, id](bool c) { m_categoryFilters[id] = c; updateCalendar(); });
+        connect(btn, &QPushButton::toggled, [this, id, cat, btn](bool c) { 
+            m_categoryFilters[id] = c; 
+            // 스타일 즉시 갱신 (반투명 효과 적용) - 캡처된 btn 포인터 직접 사용
+            if (btn) {
+                btn->setStyleSheet(StyleHelper::getCategoryPillStyle(cat["color"].toString(), c));
+            }
+            updateCalendar(); 
+        });
         if (count < 3) m_categoryLayout->addWidget(btn);
         else m_overflowLayout->addWidget(btn, (count - 3) / 5, (count - 3) % 5, Qt::AlignLeft | Qt::AlignTop);
         count++;

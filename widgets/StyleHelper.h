@@ -39,6 +39,15 @@ namespace StyleHelper {
         }
     }
 
+    inline QString getDayCellHoverBg() {
+        switch (currentTheme) {
+            case Theme::Soft:     return "#F3E5F5";
+            case Theme::DeepBlue: return "#DCEBFA";
+            case Theme::Default: 
+            default:              return "#F0F7FF";
+        }
+    }
+
     inline QString getTextColor() {
         switch (currentTheme) {
             case Theme::Soft:     return "#5D4037";
@@ -57,6 +66,11 @@ namespace StyleHelper {
     inline QString getFormLabelStyle() {
         QString color = (currentTheme == Theme::DeepBlue) ? "#1967D2" : "#666";
         return QString("font-size: 13px; font-weight: bold; color: %1; border: none; background: transparent;").arg(color);
+    }
+
+    // ── 오늘 날짜 강조 스타일 ──
+    inline QString getTodayHighlightStyle() {
+        return "background-color: #FF9800; color: white; border-radius: 13px; font-weight: bold; border: none; margin-left: 4px;";
     }
 
     inline QString getCheckboxStyle() {
@@ -151,6 +165,21 @@ namespace StyleHelper {
     // ── 다이얼로그 컨테이너 스타일 ──
     inline QString getDialogStyle() {
         return QString("QWidget#container { background-color: %1; border: 1px solid #DDD; border-radius: 12px; }").arg(getBgColor());
+    }
+
+    // ── 카테고리 알약(Pill) 스타일 ──
+    inline QString getCategoryPillStyle(const QString& color, bool checked) {
+        QString bgColor = getBgColor();
+        if (checked) {
+            return QString("QPushButton { border: 1px solid %1; border-radius: 12px; padding: 0px 12px; font-size: 11px; color: white; background-color: %1; font-weight: bold; }").arg(color);
+        } else {
+            return QString("QPushButton { border: 1px solid %1; border-radius: 12px; padding: 0px 12px; font-size: 11px; color: %1; background-color: %2; font-weight: bold; opacity: 0.5; }").arg(color, bgColor);
+        }
+    }
+
+    // ── 단일일 올데이 바 스타일 ──
+    inline QString getAllDayBarStyle(const QString& color) {
+        return QString("background-color: %1; color: white; border-radius: 3px; font-size: 11px; font-weight: bold; margin: 1px 2px; padding-left: 4px;").arg(color);
     }
 
     inline QString getItemBaseStyle(const QString& catColor) {

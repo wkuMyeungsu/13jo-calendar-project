@@ -31,8 +31,11 @@ public:
 
     private:
     void updatePlusButtonPos();
+    void updateStyle(); // 스타일 갱신 전용 메서드
 
     QDate m_date;
+    bool  m_isToday = false;
+    bool  m_isHovered = false;
     QLabel* m_dateLabel;
     QLabel* m_moreLabel; // 추가됨
     QPushButton* m_plusButton;
