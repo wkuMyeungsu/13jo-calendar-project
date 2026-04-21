@@ -5,9 +5,9 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QDate>
-#include <QVariantMap>
 #include <QList>
 #include "UiCommon.h"
+#include "../models/CalendarEngine.h"
 
 class DayCell;
 
@@ -15,7 +15,7 @@ class MonthWidget : public QWidget {
     Q_OBJECT
 public:
     explicit MonthWidget(QWidget* parent = nullptr);
-    void updateMonth(int year, int month, const QList<QVariantMap>& schedules);
+    void updateMonth(int year, int month, const QList<Schedule>& schedules);
     void setStage(const SafeZoneStage& stage);
 
 signals:

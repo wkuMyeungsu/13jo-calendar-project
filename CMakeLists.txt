@@ -18,13 +18,6 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-)
-
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-
-qt_add_executable(13jo-calendar-project
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
         widgets/DayCell.h
         widgets/DayCell.cpp
         widgets/MonthWidget.h
@@ -46,7 +39,19 @@ qt_add_executable(13jo-calendar-project
         widgets/CustomTitleBar.cpp
         models/DatabaseManager.cpp
         models/DatabaseManager.h
+        models/CalendarEngine.cpp
+        models/CalendarEngine.h
+        models/Schedule.h
+        models/Category.h
+        models/ScheduleSlot.h
         resources.rc
+)
+
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+
+qt_add_executable(13jo-calendar-project
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET 13jo-calendar-project APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
