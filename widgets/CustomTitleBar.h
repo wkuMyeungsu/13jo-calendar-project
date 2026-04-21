@@ -12,6 +12,8 @@ class CustomTitleBar : public QWidget
 
 public:
     explicit CustomTitleBar(QWidget* parent = nullptr);
+    void setTitle(const QString& title);
+    void showMinMaxButtons(bool show); // 최소화/최대화 버튼 표시 제어
     void applyTheme(const QString& bgColor, const QString& textColor, const QString& borderColor);
     void updateMaxIcon();
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -23,9 +25,11 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
     void leaveEvent(QEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override; // 절대 중앙 정렬을 위한 리사이즈 이벤트
 
 private:
     QLabel*      m_titleLabel;
+    QLabel*      m_centerTitleLabel; // 중앙 타이틀용
     QPushButton* m_minBtn;
     QPushButton* m_maxBtn;
     QPushButton* m_closeBtn;

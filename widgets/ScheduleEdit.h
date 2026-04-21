@@ -47,7 +47,6 @@ private:
     QString m_selectedColor;
 
     // UI 요소
-    QLabel *m_headerLabel;
     QLineEdit *titleInput;
     QComboBox *categoryCombo;
     QCheckBox *allDayCheck;

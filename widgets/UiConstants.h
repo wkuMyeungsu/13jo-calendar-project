@@ -56,6 +56,14 @@ namespace UiConstants {
     inline const QString COLOR_SUN = "#D32F2F";
     inline const QString COLOR_SAT = "#1565C0";
     inline const QString COLOR_WEEKDAY = "#757575";
+
+    // Widget Titles (Title Bar)
+    inline const QString TITLE_MAIN = "Calendar Project";
+    inline const QString TITLE_SCHEDULE_ADD = "새 일정 등록";
+    inline const QString TITLE_SCHEDULE_EDIT = "일정 상세 수정";
+    inline const QString TITLE_SCHEDULE_LIST = "일정 목록 관리";
+    inline const QString TITLE_CATEGORY_MGMT = "카테고리 설정";
+    inline const QString TITLE_SETTINGS = "애플리케이션 설정";
 }
 
 #endif // UICONSTANTS_H

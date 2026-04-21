@@ -24,6 +24,8 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
 
     m_titleBar = new CustomTitleBar(mainFrame);
     m_titleBar->setResizable(false);
+    m_titleBar->showMinMaxButtons(false); // 최소화/최대화 숨김
+    m_titleBar->setTitle(UiConstants::TITLE_SETTINGS);
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     frameLayout->addWidget(m_titleBar);
 
@@ -39,11 +41,8 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
     mainLayout->setSpacing(UiConstants::LAYOUT_SPACING);
 
-    QLabel *headerLabel = new QLabel("시스템 설정", m_contentWidget);
-    headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
-    mainLayout->addWidget(headerLabel);
-
     QFormLayout *formLayout = new QFormLayout();
+
     formLayout->setVerticalSpacing(UiConstants::FORM_VERTICAL_SPACING);
     formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
@@ -141,14 +140,10 @@ void SettingsWidget::updateFormStyle() {
     m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     
-    // 헤더 및 라벨 스타일 갱신
+    // 라벨 스타일 갱신
     QList<QLabel*> labels = m_contentWidget->findChildren<QLabel*>();
     for (QLabel* label : labels) {
-        if (label->text() == "시스템 설정") {
-            label->setStyleSheet(StyleHelper::getHeaderStyle());
-        } else {
-            label->setStyleSheet(StyleHelper::getFormLabelStyle());
-        }
+        label->setStyleSheet(StyleHelper::getFormLabelStyle());
     }
 
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());

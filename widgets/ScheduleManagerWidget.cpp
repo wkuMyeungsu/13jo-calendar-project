@@ -26,6 +26,8 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
 
     m_titleBar = new CustomTitleBar(mainFrame);
     m_titleBar->setResizable(false);
+    m_titleBar->showMinMaxButtons(false); // 최소화/최대화 숨김
+    m_titleBar->setTitle(UiConstants::TITLE_SCHEDULE_LIST);
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     frameLayout->addWidget(m_titleBar);
 
@@ -37,10 +39,6 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     QVBoxLayout *mainLayout = new QVBoxLayout(m_contentWidget);
     mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
     mainLayout->setSpacing(UiConstants::BTN_LAYOUT_SPACING);
-
-    m_titleLabel = new QLabel(date.toString("yyyy년 MM월 dd일 일정"), m_contentWidget);
-    m_titleLabel->setStyleSheet(StyleHelper::getHeaderStyle());
-    mainLayout->addWidget(m_titleLabel);
 
     QScrollArea *scrollArea = new QScrollArea(m_contentWidget);
     scrollArea->setWidgetResizable(true);

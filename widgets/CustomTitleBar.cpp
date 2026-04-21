@@ -13,15 +13,38 @@ CustomTitleBar::CustomTitleBar(QWidget* parent)
     setMouseTracking(true);
 
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(14, 0, 0, 0);
+    layout->setContentsMargins(10, 0, 0, 0);
     layout->setSpacing(0);
 
-    m_titleLabel = new QLabel("  캘린더", this);
+    // [1] 아이콘 설정 (Calendar.ico)
+    m_titleLabel = new QLabel(this);
     m_titleLabel->setObjectName("titleLabel");
+    
+    // 여러 경로에서 아이콘 시도 (실행 환경 고려)
+    QPixmap icon;
+    QStringList paths = { "Calendar.ico", "../Calendar.ico", "../../Calendar.ico", QCoreApplication::applicationDirPath() + "/Calendar.ico" };
+    for (const QString& path : paths) {
+        if (icon.load(path)) break;
+    }
 
+    if (!icon.isNull()) {
+        m_titleLabel->setPixmap(icon.scaled(18, 18, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    } else {
+        // 아이콘 로드 실패 시 대체 이모지
+        m_titleLabel->setText("  📅");
+        m_titleLabel->setStyleSheet("font-size: 14px;");
+    }
     layout->addWidget(m_titleLabel);
+
     layout->addStretch();
 
+    // [2] 중앙 타이틀 설정 (레이아웃에 넣지 않고 별도 관리하여 절대 중앙 정렬)
+    m_centerTitleLabel = new QLabel(this);
+    m_centerTitleLabel->setObjectName("centerTitleLabel");
+    m_centerTitleLabel->setAlignment(Qt::AlignCenter);
+    m_centerTitleLabel->setAttribute(Qt::WA_TransparentForMouseEvents); // 클릭 이벤트 관통
+    
+    // 버튼들
     auto makeBtn = [this](const QString& text, const QString& name) -> QPushButton* {
         auto* btn = new QPushButton(text, this);
         btn->setObjectName(name);
@@ -87,11 +110,34 @@ bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event) {
     return QWidget::eventFilter(watched, event);
 }
 
+void CustomTitleBar::setTitle(const QString& title) {
+    m_centerTitleLabel->setText(title);
+}
+
+void CustomTitleBar::showMinMaxButtons(bool show) {
+    m_minBtn->setVisible(show);
+    m_maxBtn->setVisible(show);
+}
+
+void CustomTitleBar::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    if (m_centerTitleLabel) {
+        m_centerTitleLabel->setFixedSize(width() / 2, height());
+        m_centerTitleLabel->move(width() / 4, 0); // 가로 기준 25% 지점부터 50% 너비 차지 -> 절대 중앙
+    }
+}
+
 void CustomTitleBar::applyTheme(const QString& bgColor, const QString& textColor, const QString& borderColor) {
     setStyleSheet(StyleHelper::getTitleBarStyle(bgColor, borderColor) + QString(
         "#titleLabel {"
         "  color: %1;"
         "  font-size: 11px;"
+        "  font-weight: bold;"
+        "  background: transparent;"
+        "}"
+        "#centerTitleLabel {"
+        "  color: %1;"
+        "  font-size: 13px;"
         "  font-weight: bold;"
         "  background: transparent;"
         "}"

@@ -25,6 +25,8 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
 
     m_titleBar = new CustomTitleBar(mainFrame);
     m_titleBar->setResizable(false);
+    m_titleBar->showMinMaxButtons(false); // 최소화/최대화 숨김
+    m_titleBar->setTitle(UiConstants::TITLE_CATEGORY_MGMT);
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     frameLayout->addWidget(m_titleBar);
 
@@ -37,13 +39,9 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
     mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
     mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
 
-    // 1. 상단 제목
-    QLabel *headerLabel = new QLabel("카테고리 관리", m_contentWidget);
-    headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
-    mainLayout->addWidget(headerLabel);
-
     // 2. 카테고리 목록 섹션
     QLabel *listLabel = new QLabel("현재 카테고리 (클릭 시 수정)", m_contentWidget);
+
     listLabel->setStyleSheet(StyleHelper::getFormLabelStyle());
     mainLayout->addWidget(listLabel);
 

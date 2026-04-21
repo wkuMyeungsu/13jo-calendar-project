@@ -36,6 +36,7 @@ void ScheduleEditDialog::initUi() {
     // 타이틀바 생성
     m_titleBar = new CustomTitleBar(mainFrame);
     m_titleBar->setResizable(false);
+    m_titleBar->showMinMaxButtons(false); // 최소화/최대화 숨김
     frameLayout->addWidget(m_titleBar);
     
     // 메인 컨텐츠 영역
@@ -47,10 +48,6 @@ void ScheduleEditDialog::initUi() {
     QVBoxLayout *mainLayout = new QVBoxLayout(m_contentWidget);
     mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
     mainLayout->setSpacing(UiConstants::LAYOUT_SPACING);
-
-    m_headerLabel = new QLabel(m_contentWidget);
-    m_headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
-    mainLayout->addWidget(m_headerLabel);
 
     QFormLayout *formLayout = new QFormLayout();
     formLayout->setVerticalSpacing(UiConstants::FORM_VERTICAL_SPACING);
@@ -154,12 +151,12 @@ void ScheduleEditDialog::setupMode(Mode mode, const Schedule& data) {
     colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
 
     if (m_mode == Mode::Add) {
-        m_headerLabel->setText("새 일정 추가");
         setWindowTitle("일정 추가");
+        m_titleBar->setTitle(UiConstants::TITLE_SCHEDULE_ADD);
         deleteBtn->hide();
     } else {
-        m_headerLabel->setText("일정 정보 수정");
         setWindowTitle("일정 수정");
+        m_titleBar->setTitle(UiConstants::TITLE_SCHEDULE_EDIT);
         deleteBtn->show();
     }
     

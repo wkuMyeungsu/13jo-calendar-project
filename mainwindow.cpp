@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 커스텀 타이틀바
     m_titleBar = new CustomTitleBar(ui->centralwidget);
+    m_titleBar->setTitle(UiConstants::TITLE_MAIN);
     m_titleBar->raise();
 
     // 우하단 리사이즈 핸들
