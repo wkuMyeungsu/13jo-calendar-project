@@ -13,27 +13,27 @@ MonthWidget::MonthWidget(QWidget* parent) : QWidget(parent) {
     m_gridLayout->setSpacing(0);
     m_gridLayout->setContentsMargins(0, 0, 0, 0);
 
-    for (int i = 0; i < 7; ++i)
+    for (int i = 0; i < UiConstants::DAYS_IN_WEEK; ++i)
         m_gridLayout->setColumnStretch(i, 1);
     m_gridLayout->setRowStretch(0, 0); // 요일 헤더 행
-    for (int i = 1; i <= 6; ++i)
+    for (int i = 1; i < (UiConstants::MAX_CALENDAR_CELLS / UiConstants::DAYS_IN_WEEK) + 1; ++i)
         m_gridLayout->setRowStretch(i, 1); // 날짜 행들
 
     // 요일 헤더 생성 (한 번만 생성)
-    for (int col = 0; col < 7; ++col) {
+    for (int col = 0; col < UiConstants::DAYS_IN_WEEK; ++col) {
         QLabel* lbl = new QLabel(kDayNames[col], this);
         lbl->setAlignment(Qt::AlignCenter);
-        QString color = (col == 0) ? "#D32F2F" : (col == 6) ? "#1565C0" : "#757575";
+        QString color = (col == 0) ? UiConstants::COLOR_SUN : (col == 6) ? UiConstants::COLOR_SAT : UiConstants::COLOR_WEEKDAY;
         lbl->setStyleSheet(QString(
-                               "font-size: 11px; font-weight: bold; color: %1; "
-                               "background: #FAFAFA; border-bottom: 1px solid #E0E0E0; "
+                               "font-size: %1px; font-weight: bold; color: %2; "
+                               "background: #FAFAFA; border-bottom: 1px solid %3; "
                                "padding: 4px 0px;"
-                               ).arg(color));
+                               ).arg(UiConstants::FONT_SIZE_TINY).arg(color).arg(UiConstants::COLOR_BORDER_DEFAULT));
         m_gridLayout->addWidget(lbl, 0, col);
     }
 
     // [개선] DayCell 42개를 미리 생성하여 풀(Pool)에 저장
-    for (int i = 0; i < 42; ++i) {
+    for (int i = 0; i < UiConstants::MAX_CALENDAR_CELLS; ++i) {
         DayCell* cell = new DayCell(this);
         cell->hide(); // 초기에는 숨김
         m_cells.append(cell);
@@ -43,8 +43,8 @@ MonthWidget::MonthWidget(QWidget* parent) : QWidget(parent) {
         connect(cell, &DayCell::addRequested,     this, &MonthWidget::addRequested);
 
         // 그리드에 미리 배치 (요일 헤더가 0행이므로 날짜는 1행부터)
-        int row = (i / 7) + 1;
-        int col = i % 7;
+        int row = (i / UiConstants::DAYS_IN_WEEK) + 1;
+        int col = i % UiConstants::DAYS_IN_WEEK;
         m_gridLayout->addWidget(cell, row, col);
     }
 }
@@ -61,16 +61,16 @@ void MonthWidget::updateMonth(int year, int month, const QList<QVariantMap>& sch
     this->setUpdatesEnabled(false);
 
     QDate firstDay(year, month, 1);
-    int startCol    = firstDay.dayOfWeek() % 7;
+    int startCol    = firstDay.dayOfWeek() % UiConstants::DAYS_IN_WEEK;
     int daysInMonth = firstDay.daysInMonth();
 
     // --- 1. 스케줄 슬롯 계산 로직 (기존과 동일하지만 최적화됨) ---
     QMap<QDate, QList<QVariantMap>> daySlots;
-    int totalRows = (daysInMonth + startCol + 6) / 7;
+    int totalRows = (daysInMonth + startCol + (UiConstants::DAYS_IN_WEEK - 1)) / UiConstants::DAYS_IN_WEEK;
 
     for (int row = 0; row < totalRows; ++row) {
-        QDate weekStart = firstDay.addDays(-startCol + row * 7);
-        QDate weekEnd   = weekStart.addDays(6);
+        QDate weekStart = firstDay.addDays(-startCol + row * UiConstants::DAYS_IN_WEEK);
+        QDate weekEnd   = weekStart.addDays(UiConstants::DAYS_IN_WEEK - 1);
 
         QList<QVariantMap> weekScheds;
         for (const auto& s : schedules) {
@@ -118,7 +118,7 @@ void MonthWidget::updateMonth(int year, int month, const QList<QVariantMap>& sch
                 barSlotIndices.insert(ass.second);
         }
 
-        for (int col = 0; col < 7; ++col) {
+        for (int col = 0; col < UiConstants::DAYS_IN_WEEK; ++col) {
             QDate date = weekStart.addDays(col);
             if (date.month() != month) continue;
             QList<QVariantMap> slotList(totalSlots);
@@ -138,7 +138,7 @@ void MonthWidget::updateMonth(int year, int month, const QList<QVariantMap>& sch
 
     // --- 2. [개선] 미리 만들어둔 Cell 업데이트 및 노출 제어 ---
     // 모든 셀을 돌며 이번 달에 속하는지 확인
-    for (int i = 0; i < 42; ++i) {
+    for (int i = 0; i < UiConstants::MAX_CALENDAR_CELLS; ++i) {
         DayCell* cell = m_cells[i];
         int dayIndex = i - startCol + 1; // 실제 날짜 계산
 

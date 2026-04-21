@@ -33,6 +33,7 @@
 
 // ── 프로젝트 전역 상수 및 시스템 (Stable) ──
 #include "StyleHelper.h"
+#include "UiConstants.h"
 #include "../models/DatabaseManager.h"
 
 struct SafeZoneStage {

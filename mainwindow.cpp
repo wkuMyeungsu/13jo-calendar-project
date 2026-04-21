@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_currentYear(QDate::currentDate().year())
     , m_currentMonth(QDate::currentDate().month())
     , m_xOffset(0)
-    , m_currentHeaderH(kBaseHeaderH)
+    , m_currentHeaderH(UiConstants::BASE_HEADER_HEIGHT)
     , m_isExpanded(false)
     , m_isMiniMode(false)
     , m_isPinned(false)
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowFlag(Qt::FramelessWindowHint);
     ui->setupUi(this);
-    setMinimumSize(400, 500);
+    setMinimumSize(UiConstants::DEFAULT_MIN_WIDTH, UiConstants::DEFAULT_MIN_HEIGHT);
 
     // [Fix] 하단 중복 드래그 UI(SizeGrip) 제거
     ui->statusbar->setSizeGripEnabled(false);
@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 우하단 리사이즈 핸들
     m_sizeGrip = new QSizeGrip(ui->centralwidget);
-    m_sizeGrip->setFixedSize(16, 16);
+    m_sizeGrip->setFixedSize(UiConstants::SIZE_GRIP_SIZE, UiConstants::SIZE_GRIP_SIZE);
     m_sizeGrip->raise();
 
     if (!DatabaseManager::instance().initDatabase("calendar_data.db")) {
@@ -68,14 +68,14 @@ MainWindow::MainWindow(QWidget *parent)
     centerLayout->setAlignment(Qt::AlignCenter);
 
     m_prevBtn = new QPushButton("◀", centerGroup);
-    m_prevBtn->setFixedSize(30, 30);
+    m_prevBtn->setFixedSize(UiConstants::NAV_BTN_SIZE, UiConstants::NAV_BTN_SIZE);
     m_prevBtn->setCursor(Qt::PointingHandCursor);
 
     m_monthLabel = new QLabel(centerGroup);
     m_monthLabel->setAlignment(Qt::AlignCenter);
 
     m_nextBtn = new QPushButton("▶", centerGroup);
-    m_nextBtn->setFixedSize(30, 30);
+    m_nextBtn->setFixedSize(UiConstants::NAV_BTN_SIZE, UiConstants::NAV_BTN_SIZE);
     m_nextBtn->setCursor(Qt::PointingHandCursor);
 
     centerLayout->addWidget(m_prevBtn);
@@ -405,10 +405,10 @@ void MainWindow::updateLayoutPositions() {
     int w = ui->centralwidget->width(); if (w <= 0) return;
     int totalH = ui->centralwidget->height();
 
-    m_titleBar->setGeometry(0, 0, w, kTitleBarH);
+    m_titleBar->setGeometry(0, 0, w, UiConstants::TITLE_BAR_HEIGHT);
     m_titleBar->raise();
 
-    m_headerBar->setGeometry(0, kTitleBarH, w, kBaseHeaderH);
+    m_headerBar->setGeometry(0, UiConstants::TITLE_BAR_HEIGHT, w, UiConstants::BASE_HEADER_HEIGHT);
     m_headerBar->raise();
 
     if (m_isExpanded && m_moreBtn && !m_moreBtn->isHidden()) {
@@ -418,12 +418,12 @@ void MainWindow::updateLayoutPositions() {
         int overflowH = (btnCount > 0) ? 20 + (((btnCount + 4) / 5) * 22) + 10 : 0;
 
         m_overflowWidget->setFixedHeight(overflowH);
-        m_overflowWidget->setGeometry(0, kTitleBarH + kBaseHeaderH, w, overflowH);
+        m_overflowWidget->setGeometry(0, UiConstants::TITLE_BAR_HEIGHT + UiConstants::BASE_HEADER_HEIGHT, w, overflowH);
         m_overflowWidget->raise();
-        m_currentHeaderH = kBaseHeaderH + overflowH;
-    } else { m_overflowWidget->hide(); m_currentHeaderH = kBaseHeaderH; }
+        m_currentHeaderH = UiConstants::BASE_HEADER_HEIGHT + overflowH;
+    } else { m_overflowWidget->hide(); m_currentHeaderH = UiConstants::BASE_HEADER_HEIGHT; }
 
-    int contentH = totalH - kTitleBarH - m_currentHeaderH;
+    int contentH = totalH - UiConstants::TITLE_BAR_HEIGHT - m_currentHeaderH;
     SafeZoneStage stage = getStageForHeight(contentH);
 
     m_container->resize(w * 3, contentH);
@@ -431,7 +431,7 @@ void MainWindow::updateLayoutPositions() {
         m_months[i]->setStage(stage);
         m_months[i]->setGeometry(i * w, 0, w, contentH);
     }
-    m_container->move(-w + m_xOffset, kTitleBarH + m_currentHeaderH);
+    m_container->move(-w + m_xOffset, UiConstants::TITLE_BAR_HEIGHT + m_currentHeaderH);
     m_container->lower();
 
     m_sizeGrip->move(w - m_sizeGrip->width(), totalH - m_sizeGrip->height());
@@ -476,7 +476,7 @@ void MainWindow::wheelEvent(QWheelEvent* event) {
 
     if (m_xOffset > w) m_xOffset = w;
     if (m_xOffset < -w) m_xOffset = -w;
-    m_container->move(-w + m_xOffset, kTitleBarH + m_currentHeaderH);
+    m_container->move(-w + m_xOffset, UiConstants::TITLE_BAR_HEIGHT + m_currentHeaderH);
     m_scrollTimer->start(150);
 
     event->accept();
@@ -616,3 +616,4 @@ void MainWindow::toggleOverflow() {
 }
 
 MainWindow::~MainWindow() { delete ui; }
+() { delete ui; }

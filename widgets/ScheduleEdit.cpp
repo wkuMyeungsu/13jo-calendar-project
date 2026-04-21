@@ -3,20 +3,20 @@
 #include "ColorPickerPopup.h"
 
 ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *parent) : QWidget(parent) {
-    setFixedSize(StyleHelper::WIDGET_WIDTH, 520);
+    setFixedSize(UiConstants::DIALOG_WIDGET_WIDTH, UiConstants::SCHEDULE_EDIT_HEIGHT);
     setWindowTitle("새 일정 추가");
     setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
-    mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
+    mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
+    mainLayout->setSpacing(UiConstants::LAYOUT_SPACING);
 
     QLabel *headerLabel = new QLabel("새 일정 등록", this);
     headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
     QFormLayout *formLayout = new QFormLayout();
-    formLayout->setVerticalSpacing(12);
+    formLayout->setVerticalSpacing(UiConstants::FORM_VERTICAL_SPACING);
     formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     QString commonStyle = StyleHelper::getCommonInputStyle();
@@ -35,7 +35,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     m_selectedColor = StyleHelper::getPrimaryColor();
     colorBtn = new QPushButton("색상 선택", this);
     colorBtn->setCursor(Qt::PointingHandCursor);
-    colorBtn->setFixedHeight(32);
+    colorBtn->setFixedHeight(UiConstants::INPUT_HEIGHT);
     colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold; border-radius: 6px; border: none;").arg(m_selectedColor));
 
     allDayCheck = new QCheckBox("하루 종일", this);
@@ -74,7 +74,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     formLayout->addRow(createFormLabel("내용"), contentInput);
 
     mainLayout->addLayout(formLayout);
-    mainLayout->addSpacing(10);
+    mainLayout->addSpacing(UiConstants::BTN_LAYOUT_SPACING);
     mainLayout->addWidget(saveBtn);
 
     connect(allDayCheck, &QCheckBox::toggled, this, &ScheduleInputWidget::toggleAllDay);

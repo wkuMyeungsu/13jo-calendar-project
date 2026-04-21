@@ -5,13 +5,13 @@
 #include "SettingsWidget.h"
 
 ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent) : QWidget(parent), m_date(date) {
-    setFixedSize(StyleHelper::WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
+    setFixedSize(UiConstants::DIALOG_WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
     setWindowTitle(date.toString("yyyy-MM-dd") + " 일정 관리");
     setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
-    mainLayout->setSpacing(10);
+    mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
+    mainLayout->setSpacing(UiConstants::BTN_LAYOUT_SPACING);
 
     m_titleLabel = new QLabel(date.toString("yyyy년 MM월 dd일 일정"), this);
     m_titleLabel->setStyleSheet(StyleHelper::getHeaderStyle());
@@ -27,7 +27,7 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     scrollContent->setStyleSheet("background: transparent;");
     m_listLayout = new QVBoxLayout(scrollContent);
     m_listLayout->setContentsMargins(5, 5, 15, 5);
-    m_listLayout->setSpacing(12);
+    m_listLayout->setSpacing(UiConstants::FORM_VERTICAL_SPACING);
     m_listLayout->setAlignment(Qt::AlignTop);
     
     scrollArea->setWidget(scrollContent);
@@ -55,7 +55,7 @@ void ScheduleManagerWidget::refreshList() {
     if (schedules.isEmpty()) {
         QLabel *emptyLabel = new QLabel("등록된 일정이 없습니다.", this);
         emptyLabel->setAlignment(Qt::AlignCenter);
-        emptyLabel->setStyleSheet(QString("color: #999; font-size: 14px; margin-top: 50px; background: transparent;"));
+        emptyLabel->setStyleSheet(QString("color: %1; font-size: 14px; margin-top: 50px; background: transparent;").arg(UiConstants::COLOR_TEXT_LIGHT));
         m_listLayout->addWidget(emptyLabel);
         return;
     }
@@ -80,7 +80,7 @@ void ScheduleManagerWidget::refreshList() {
         
         QString timeStr = (s["all_day"].toInt() == 1) ? "하루 종일" : QString("%1 ~ %2").arg(s["start"].toString().mid(11, 5)).arg(s["end"].toString().mid(11, 5));
         QLabel *time = new QLabel(timeStr, itemWidget);
-        time->setStyleSheet(QString("color: #777; font-size: 12px; border: none; background: transparent;"));
+        time->setStyleSheet(QString("color: %1; font-size: 12px; border: none; background: transparent;").arg(UiConstants::COLOR_TEXT_DIM));
 
         textLayout->addWidget(title);
         textLayout->addWidget(time);
@@ -90,7 +90,7 @@ void ScheduleManagerWidget::refreshList() {
         if (!content.isEmpty()) {
             if (content.length() > 25) content = content.left(22) + "...";
             QLabel *noteLabel = new QLabel(content, itemWidget);
-            noteLabel->setStyleSheet(QString("color: #999; font-size: 11px; font-style: italic; border: none; background: transparent; padding-left: 10px; padding-right: 5px;"));
+            noteLabel->setStyleSheet(QString("color: %1; font-size: %2px; font-style: italic; border: none; background: transparent; padding-left: 10px; padding-right: 5px;").arg(UiConstants::COLOR_TEXT_LIGHT).arg(UiConstants::FONT_SIZE_SMALL));
             noteLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
             itemLayout->addWidget(noteLabel, 3);
         } else {

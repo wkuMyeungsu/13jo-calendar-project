@@ -10,7 +10,7 @@ DayCell::DayCell(QWidget* parent)
     : QFrame(parent)
 {
     setFrameStyle(QFrame::NoFrame);
-    setMinimumSize(40, 40);
+    setMinimumSize(UiConstants::CELL_MIN_SIZE, UiConstants::CELL_MIN_SIZE);
     m_stage = {2, 22, 11}; 
 
     // 메인 레이아웃
@@ -20,7 +20,7 @@ DayCell::DayCell(QWidget* parent)
 
     // [1] Date Header 영역 (22px 고정)
     m_dateLabel = new QLabel(this);
-    m_dateLabel->setFixedHeight(22);
+    m_dateLabel->setFixedHeight(UiConstants::DATE_HEADER_HEIGHT);
     m_dateLabel->setStyleSheet("font-weight: bold; border: none;");
     mainLayout->addWidget(m_dateLabel, 0, Qt::AlignTop | Qt::AlignLeft);
 
@@ -49,10 +49,10 @@ DayCell::DayCell(QWidget* parent)
 
     // [6] 플러스 버튼 (Floating)
     m_plusButton = new QPushButton("+", this);
-    m_plusButton->setFixedSize(24, 24);
+    m_plusButton->setFixedSize(UiConstants::PLUS_BTN_SIZE, UiConstants::PLUS_BTN_SIZE);
     m_plusButton->setCursor(Qt::PointingHandCursor);
     m_plusButton->setStyleSheet(
-        "QPushButton { border: none; background-color: #4A90E2; color: white; border-radius: 12px; font-size: 16px; font-weight: bold; }"
+        QString("QPushButton { border: none; background-color: #4A90E2; color: white; border-radius: %1px; font-size: 16px; font-weight: bold; }").arg(UiConstants::PLUS_BTN_SIZE / 2) +
         "QPushButton:hover { background-color: #357ABD; }"
     );
     
@@ -62,7 +62,7 @@ DayCell::DayCell(QWidget* parent)
     m_plusAnim = new QPropertyAnimation(m_plusOpacity, "opacity", this);
 
     connect(m_plusButton, &QPushButton::clicked, [this]() { emit addRequested(m_date); });
-    setStyleSheet("DayCell { border: 0.5px solid #E0E0E0; background-color: white; }");
+    setStyleSheet(QString("DayCell { border: 0.5px solid %1; background-color: white; }").arg(UiConstants::COLOR_BORDER_DEFAULT));
 }
 
 void DayCell::setStage(const SafeZoneStage& stage) {
@@ -70,7 +70,7 @@ void DayCell::setStage(const SafeZoneStage& stage) {
     
     m_stage = stage;
     m_moreLabel->setFixedHeight(stage.slotHeight);
-    m_moreLabel->setStyleSheet(QString("font-size: %1px; color: #777; font-weight: bold; padding: 0px 5px;").arg(stage.fontSize - 1));
+    m_moreLabel->setStyleSheet(QString("font-size: %1px; color: %2; font-weight: bold; padding: 0px 5px;").arg(stage.fontSize - 1).arg(UiConstants::COLOR_TEXT_DIM));
     
     if (!m_currentSchedules.isEmpty()) {
         setSchedules(m_currentSchedules);
@@ -87,7 +87,7 @@ void DayCell::setDate(const QDate& date) {
     } else {
         m_dateLabel->setMinimumWidth(0); m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
         m_dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        QString color = (date.dayOfWeek() == 6) ? "#1565C0" : (date.dayOfWeek() == 7 ? "#D32F2F" : "#333");
+        QString color = (date.dayOfWeek() == 6) ? UiConstants::COLOR_SAT : (date.dayOfWeek() == 7 ? UiConstants::COLOR_SUN : "#333");
         m_dateLabel->setStyleSheet(QString("font-weight: bold; color: %1; border: none; padding-left: 8px;").arg(color));
     }
 }
@@ -161,7 +161,7 @@ void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
 }
 
 void DayCell::updatePlusButtonPos() {
-    m_plusButton->move(width() - 28, height() - 28);
+    m_plusButton->move(width() - (UiConstants::PLUS_BTN_SIZE + 4), height() - (UiConstants::PLUS_BTN_SIZE + 4));
     m_plusButton->raise();
 }
 

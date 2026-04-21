@@ -5,7 +5,7 @@
 CustomTitleBar::CustomTitleBar(QWidget* parent)
     : QWidget(parent)
 {
-    setFixedHeight(30);
+    setFixedHeight(UiConstants::TITLE_BAR_HEIGHT);
     setObjectName("customTitleBar");
     setAttribute(Qt::WA_StyledBackground, true);
     setMouseTracking(true);
@@ -23,7 +23,7 @@ CustomTitleBar::CustomTitleBar(QWidget* parent)
     auto makeBtn = [this](const QString& text, const QString& name) -> QPushButton* {
         auto* btn = new QPushButton(text, this);
         btn->setObjectName(name);
-        btn->setFixedSize(46, 30);
+        btn->setFixedSize(46, UiConstants::TITLE_BAR_HEIGHT);
         btn->setCursor(Qt::ArrowCursor);
         btn->setFlat(true);
         return btn;
