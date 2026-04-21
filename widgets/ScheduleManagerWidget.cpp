@@ -1,7 +1,6 @@
 #include "ScheduleManagerWidget.h"
 #include "UiCommon.h"
 #include "ScheduleEdit.h"
-#include "ScheduleModifyWidget.h"
 #include "SettingsWidget.h"
 
 ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent) : QWidget(parent), m_date(date) {
@@ -167,10 +166,10 @@ bool ScheduleManagerWidget::eventFilter(QObject *obj, QEvent *event) {
 }
 
 void ScheduleManagerWidget::openAddWidget() {
-    ScheduleInputWidget *inputWidget = new ScheduleInputWidget(m_date);
+    ScheduleEditDialog *inputWidget = new ScheduleEditDialog(m_date);
     inputWidget->setAttribute(Qt::WA_DeleteOnClose);
     inputWidget->setWindowModality(Qt::ApplicationModal);
-    connect(inputWidget, &ScheduleInputWidget::scheduleSaved, this, [this]() {
+    connect(inputWidget, &ScheduleEditDialog::scheduleSaved, this, [this]() {
         refreshList();
         emit dataChanged();
     });
@@ -178,15 +177,14 @@ void ScheduleManagerWidget::openAddWidget() {
 }
 
 void ScheduleManagerWidget::openEditWidget(const Schedule& data) {
-    ScheduleModifyWidget *modifyWidget = new ScheduleModifyWidget(data);
+    ScheduleEditDialog *modifyWidget = new ScheduleEditDialog(data);
     modifyWidget->setAttribute(Qt::WA_DeleteOnClose);
     modifyWidget->setWindowModality(Qt::ApplicationModal);
-    modifyWidget->setWindowTitle("일정 수정/삭제");
-    connect(modifyWidget, &ScheduleModifyWidget::scheduleUpdated, this, [this]() {
+    connect(modifyWidget, &ScheduleEditDialog::scheduleSaved, this, [this]() {
         refreshList();
         emit dataChanged();
     });
-    connect(modifyWidget, &ScheduleModifyWidget::scheduleDeleted, this, [this]() {
+    connect(modifyWidget, &ScheduleEditDialog::scheduleDeleted, this, [this]() {
         refreshList();
         emit dataChanged();
     });

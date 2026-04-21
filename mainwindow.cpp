@@ -5,7 +5,6 @@
 #include "ScheduleEdit.h"
 #include "ScheduleManagerWidget.h"
 #include "CategoryModifyWidget.h"
-#include "ScheduleModifyWidget.h"
 #include "SettingsWidget.h"
 
 /*** 메인윈도우 ***/
@@ -334,11 +333,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     if (colorStr.isEmpty()) colorStr = StyleHelper::getPrimaryColor();
 
     if (event->type() == QEvent::MouseButtonPress) {
-        ScheduleModifyWidget *modifyWidget = new ScheduleModifyWidget(m_miniItemDataMap[widget]);
+        ScheduleEditDialog *modifyWidget = new ScheduleEditDialog(m_miniItemDataMap[widget]);
         modifyWidget->setAttribute(Qt::WA_DeleteOnClose);
         modifyWidget->setWindowModality(Qt::ApplicationModal);
-        connect(modifyWidget, &ScheduleModifyWidget::scheduleUpdated, this, &MainWindow::updateCalendar);
-        connect(modifyWidget, &ScheduleModifyWidget::scheduleDeleted, this, &MainWindow::updateCalendar);
+        connect(modifyWidget, &ScheduleEditDialog::scheduleSaved, this, &MainWindow::updateCalendar);
+        connect(modifyWidget, &ScheduleEditDialog::scheduleDeleted, this, &MainWindow::updateCalendar);
         modifyWidget->show();
         return true;
     } 
@@ -555,10 +554,10 @@ void MainWindow::handleDayDoubleClicked(const QDate& date) {
 }
 
 void MainWindow::handleDayAddRequested(const QDate& date) {
-    ScheduleInputWidget *w = new ScheduleInputWidget(date);
+    ScheduleEditDialog *w = new ScheduleEditDialog(date);
 
     w->setAttribute(Qt::WA_DeleteOnClose); w->setWindowModality(Qt::ApplicationModal);
-    connect(w, &ScheduleInputWidget::scheduleSaved, this, &MainWindow::updateCalendar);
+    connect(w, &ScheduleEditDialog::scheduleSaved, this, &MainWindow::updateCalendar);
 
     w->show();
 }

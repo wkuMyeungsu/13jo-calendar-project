@@ -24,8 +24,6 @@ set(PROJECT_SOURCES
         widgets/MonthWidget.cpp
         widgets/ScheduleEdit.cpp
         widgets/ScheduleEdit.h
-        widgets/ScheduleModifyWidget.cpp
-        widgets/ScheduleModifyWidget.h
         widgets/ScheduleManagerWidget.cpp
         widgets/ScheduleManagerWidget.h
         widgets/CategoryModifyWidget.cpp
