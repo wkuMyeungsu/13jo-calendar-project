@@ -1,4 +1,5 @@
 #include "CustomTitleBar.h"
+#include "UiConstants.h"
 #include <QHBoxLayout>
 #include <QMouseEvent>
 
@@ -138,13 +139,24 @@ void CustomTitleBar::mouseMoveEvent(QMouseEvent* event) {
         QPoint diff = event->globalPosition().toPoint() - m_resizeStartPos;
         QRect newGeom = m_resizeStartGeometry;
 
-        // 우상단 리사이즈: 오른쪽 경계 확장 및 상단 경계 이동
-        newGeom.setRight(m_resizeStartGeometry.right() + diff.x());
-        newGeom.setTop(m_resizeStartGeometry.top() + diff.y());
+        // 우상단 리사이즈: 오른쪽 경계(Right)와 상단 경계(Top)를 독립적으로 계산
+        int targetRight = m_resizeStartGeometry.right() + diff.x();
+        int targetTop = m_resizeStartGeometry.top() + diff.y();
 
-        if (newGeom.width() >= window()->minimumWidth() && newGeom.height() >= window()->minimumHeight()) {
-            window()->setGeometry(newGeom);
+        // 너비 최소 크기 제한
+        if (targetRight - m_resizeStartGeometry.left() < window()->minimumWidth()) {
+            targetRight = m_resizeStartGeometry.left() + window()->minimumWidth();
         }
+        
+        // 높이 최소 크기 제한 (상단을 움직이므로 하단 고정 상태에서 계산)
+        if (m_resizeStartGeometry.bottom() - targetTop < window()->minimumHeight()) {
+            targetTop = m_resizeStartGeometry.bottom() - window()->minimumHeight();
+        }
+
+        newGeom.setRight(targetRight);
+        newGeom.setTop(targetTop);
+        
+        window()->setGeometry(newGeom);
         return;
     }
 

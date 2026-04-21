@@ -263,8 +263,8 @@ void MainWindow::setMiniMode(bool mini) {
         // 타이틀바 및 미니 위젯 레이아웃
         int w = ui->centralwidget->width();
         int h = ui->centralwidget->height();
-        m_titleBar->setGeometry(0, 0, w, kTitleBarH);
-        m_miniWidget->setGeometry(0, kTitleBarH, w, h - kTitleBarH);
+        m_titleBar->setGeometry(0, 0, w, UiConstants::TITLE_BAR_HEIGHT);
+        m_miniWidget->setGeometry(0, UiConstants::TITLE_BAR_HEIGHT, w, h - UiConstants::TITLE_BAR_HEIGHT);
         
         QDate today = QDate::currentDate();
         m_miniDateLabel->setText(today.toString("yyyy년 MM월 dd일 dddd"));
@@ -388,8 +388,10 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     if (m_isMiniMode && m_miniWidget) {
         int w = ui->centralwidget->width();
         int h = ui->centralwidget->height();
-        m_titleBar->setGeometry(0, 0, w, kTitleBarH);
-        m_miniWidget->setGeometry(0, kTitleBarH, w, h - kTitleBarH);
+        m_titleBar->setGeometry(0, 0, w, UiConstants::TITLE_BAR_HEIGHT);
+        m_miniWidget->setGeometry(0, UiConstants::TITLE_BAR_HEIGHT, w, h - UiConstants::TITLE_BAR_HEIGHT);
+        m_sizeGrip->move(w - m_sizeGrip->width(), h - m_sizeGrip->height());
+        m_sizeGrip->raise();
     } else {
         updateLayoutPositions();
     }
@@ -495,7 +497,7 @@ void MainWindow::slideMonth(int direction) {
 
     m_animation->stop();
     m_animation->setStartValue(m_container->pos());
-    m_animation->setEndValue(QPoint(targetX, kTitleBarH + m_currentHeaderH));
+    m_animation->setEndValue(QPoint(targetX, UiConstants::TITLE_BAR_HEIGHT + m_currentHeaderH));
     m_animation->disconnect(SIGNAL(finished()));
 
     connect(m_animation, &QPropertyAnimation::finished, [this, direction]() {
@@ -530,7 +532,7 @@ void MainWindow::goToday() {
 
     m_animation->stop();
     m_animation->setStartValue(m_container->pos());
-    m_animation->setEndValue(QPoint(targetX, kTitleBarH + m_currentHeaderH));
+    m_animation->setEndValue(QPoint(targetX, UiConstants::TITLE_BAR_HEIGHT + m_currentHeaderH));
 
     m_animation->disconnect(SIGNAL(finished()));
     connect(m_animation, &QPropertyAnimation::finished, [this, today]() {
@@ -616,4 +618,3 @@ void MainWindow::toggleOverflow() {
 }
 
 MainWindow::~MainWindow() { delete ui; }
-() { delete ui; }
