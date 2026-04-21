@@ -5,6 +5,7 @@
 #include <QComboBox>
 #include <QSpinBox>
 #include <QPushButton>
+#include "CustomTitleBar.h"
 
 class SettingsWidget : public QWidget {
     Q_OBJECT
@@ -13,6 +14,10 @@ public:
 
 signals:
     void settingsChanged(); // 설정 변경 시 발생 (테마 갱신 등용)
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private slots:
     void applySettings();
@@ -24,6 +29,9 @@ private:
     QComboBox *m_themeCombo;
     QPushButton *m_applyBtn;
     QPushButton *m_resetBtn;
+
+    CustomTitleBar *m_titleBar;
+    QWidget *m_contentWidget;
 };
 
 #endif // SETTINGSWIDGET_H

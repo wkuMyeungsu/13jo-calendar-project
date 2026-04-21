@@ -3,25 +3,50 @@
 #include "ColorPickerPopup.h"
 
 CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m_currentEditingId(-1) {
+    setWindowFlag(Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setFixedSize(StyleHelper::WIDGET_WIDTH + 2, StyleHelper::WIDGET_HEIGHT + UiConstants::TITLE_BAR_HEIGHT + 2);
     setWindowTitle("카테고리 설정");
-    setFixedSize(StyleHelper::WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
-    setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    // [New] 마스터 프레임 (모든 것을 감싸고 테두리/곡률 담당)
+    QFrame* mainFrame = new QFrame(this);
+    mainFrame->setObjectName("mainFrame");
+    mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
+
+    // 최상위 레이아웃 (프레임에 1px 여백을 주어 곡률 안티앨리어싱 확보)
+    QVBoxLayout* masterLayout = new QVBoxLayout(this);
+    masterLayout->setContentsMargins(1, 1, 1, 1);
+    masterLayout->addWidget(mainFrame);
+
+    // 프레임 내부 레이아웃
+    QVBoxLayout* frameLayout = new QVBoxLayout(mainFrame);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
+    frameLayout->setSpacing(0);
+
+    m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
+    frameLayout->addWidget(m_titleBar);
+
+    m_contentWidget = new QWidget(mainFrame);
+    m_contentWidget->setObjectName("container");
+    m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
+    frameLayout->addWidget(m_contentWidget);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(m_contentWidget);
     mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
     mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
 
     // 1. 상단 제목
-    QLabel *headerLabel = new QLabel("카테고리 관리", this);
+    QLabel *headerLabel = new QLabel("카테고리 관리", m_contentWidget);
     headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
     // 2. 카테고리 목록 섹션
-    QLabel *listLabel = new QLabel("현재 카테고리 (클릭 시 수정)", this);
+    QLabel *listLabel = new QLabel("현재 카테고리 (클릭 시 수정)", m_contentWidget);
     listLabel->setStyleSheet(StyleHelper::getFormLabelStyle());
     mainLayout->addWidget(listLabel);
 
-    m_listWidget = new QListWidget(this);
+    m_listWidget = new QListWidget(m_contentWidget);
     m_listWidget->setSpacing(8);
     m_listWidget->setStyleSheet(StyleHelper::getListWidgetStyle() + StyleHelper::getScrollbarStyle());
     mainLayout->addWidget(m_listWidget);
@@ -32,12 +57,12 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
     QHBoxLayout *editLayout = new QHBoxLayout();
     editLayout->setSpacing(10);
 
-    m_nameInput = new QLineEdit(this);
+    m_nameInput = new QLineEdit(m_contentWidget);
     m_nameInput->setPlaceholderText("카테고리 이름을 입력하세요");
     m_nameInput->setStyleSheet(inputStyle);
     
     m_selectedColor = "#4A90E2";
-    m_colorBtn = new QPushButton(this);
+    m_colorBtn = new QPushButton(m_contentWidget);
     m_colorBtn->setCursor(Qt::PointingHandCursor);
     m_colorBtn->setFixedSize(UiConstants::COLOR_BTN_SIZE, UiConstants::COLOR_BTN_SIZE);
     m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
@@ -50,16 +75,16 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
     QHBoxLayout *btnLayout = new QHBoxLayout();
     btnLayout->setSpacing(10);
 
-    m_addBtn = new QPushButton("신규 추가", this);
+    m_addBtn = new QPushButton("신규 추가", m_contentWidget);
     m_addBtn->setCursor(Qt::PointingHandCursor);
     m_addBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
     
-    m_editBtn = new QPushButton("변경 저장", this);
+    m_editBtn = new QPushButton("변경 저장", m_contentWidget);
     m_editBtn->setCursor(Qt::PointingHandCursor);
     m_editBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
     m_editBtn->setEnabled(false);
 
-    m_deleteBtn = new QPushButton("삭제", this);
+    m_deleteBtn = new QPushButton("삭제", m_contentWidget);
     m_deleteBtn->setCursor(Qt::PointingHandCursor);
     m_deleteBtn->setStyleSheet(StyleHelper::getBtnDeleteStyle());
     m_deleteBtn->setEnabled(false);
@@ -77,6 +102,17 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
     connect(m_deleteBtn, &QPushButton::clicked, this, &CategoryModifyWidget::handleDelete);
 
     loadCategories();
+}
+
+void CategoryModifyWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+}
+
+void CategoryModifyWidget::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::WindowStateChange) {
+        m_titleBar->updateMaxIcon();
+    }
+    QWidget::changeEvent(event);
 }
 
 void CategoryModifyWidget::loadCategories() {

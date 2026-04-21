@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QColor>
+#include "CustomTitleBar.h"
 
 class CategoryModifyWidget : public QWidget {
     Q_OBJECT
@@ -14,6 +15,10 @@ public:
 
 signals:
     void categoriesChanged(); // 카테고리 변경 시 발생 (달력 갱신용)
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private slots:
     void loadCategories();
@@ -33,6 +38,9 @@ private:
     
     QString m_selectedColor;
     int m_currentEditingId; // -1이면 추가 모드, 아니면 수정 모드
+
+    CustomTitleBar *m_titleBar;
+    QWidget *m_contentWidget;
 };
 
 #endif // CATEGORYMODIFYWIDGET_H

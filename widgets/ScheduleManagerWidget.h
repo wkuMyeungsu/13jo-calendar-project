@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QScrollArea>
+#include "CustomTitleBar.h"
 
 class ScheduleManagerWidget : public QWidget {
     Q_OBJECT
@@ -20,6 +21,8 @@ signals:
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private slots:
     void refreshList();
@@ -31,6 +34,9 @@ private:
     QVBoxLayout *m_listLayout;
     QLabel *m_titleLabel;
     QMap<QObject*, QVariantMap> m_itemDataMap; // 위젯과 데이터 매핑용
+
+    CustomTitleBar *m_titleBar;
+    QWidget *m_contentWidget;
 };
 
 #endif // SCHEDULEMANAGERWIDGET_H

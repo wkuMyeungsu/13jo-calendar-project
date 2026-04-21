@@ -10,6 +10,7 @@
 #include <QCheckBox>
 #include <QTextEdit>
 #include <QColorDialog>
+#include "CustomTitleBar.h"
 
 class ScheduleInputWidget : public QWidget {
     Q_OBJECT
@@ -18,6 +19,10 @@ public:
 
 signals:
     void scheduleSaved();
+
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+    void changeEvent(QEvent* event) override;
 
 private slots:
     void handleSave();
@@ -34,7 +39,9 @@ private:
     QPushButton *colorBtn;
     QPushButton *saveBtn;
     QString m_selectedColor;
-};
 
+    CustomTitleBar* m_titleBar;
+    QWidget*        m_contentWidget;
+};
 
 #endif // SCHEDULEINPUTWIDGET_H

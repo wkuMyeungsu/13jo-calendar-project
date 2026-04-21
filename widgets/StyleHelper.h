@@ -162,9 +162,21 @@ namespace StyleHelper {
         ).arg(color).arg(size / 2);
     }
 
-    // ── 다이얼로그 컨테이너 스타일 ──
+    // ── 다이얼로그 전체 프레임 스타일 (통합 테두리 및 곡률) ──
+    inline QString getDialogFrameStyle() {
+        return QString("QFrame#mainFrame { background-color: %1; border: 1px solid #DDD; border-radius: 12px; }").arg(getBgColor());
+    }
+
+    // ── 다이얼로그 내부 컨텐츠 스타일 (테두리 제거) ──
     inline QString getDialogStyle() {
-        return QString("QWidget#container { background-color: %1; border: 1px solid #DDD; border-radius: 12px; }").arg(getBgColor());
+        return "QWidget#container { background-color: transparent; border: none; }";
+    }
+
+    // ── 커스텀 타이틀바 전용 스타일 (상단 곡률만 유지, 테두리 제거) ──
+    inline QString getTitleBarStyle(const QString& bgColor, const QString& borderColor) {
+        return QString(
+            "#customTitleBar { background-color: %1; border: none; border-bottom: 1px solid %2; border-top-left-radius: 11px; border-top-right-radius: 11px; }"
+        ).arg(bgColor, borderColor);
     }
 
     // ── 카테고리 알약(Pill) 스타일 ──

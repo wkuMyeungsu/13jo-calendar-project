@@ -5,19 +5,44 @@
 #include "SettingsWidget.h"
 
 ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent) : QWidget(parent), m_date(date) {
-    setFixedSize(UiConstants::DIALOG_WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
+    setWindowFlag(Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setFixedSize(UiConstants::DIALOG_WIDGET_WIDTH + 2, StyleHelper::WIDGET_HEIGHT + UiConstants::TITLE_BAR_HEIGHT + 2);
     setWindowTitle(date.toString("yyyy-MM-dd") + " 일정 관리");
-    setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    // [New] 마스터 프레임 (모든 것을 감싸고 테두리/곡률 담당)
+    QFrame* mainFrame = new QFrame(this);
+    mainFrame->setObjectName("mainFrame");
+    mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
+
+    // 최상위 레이아웃 (프레임에 1px 여백을 주어 곡률 안티앨리어싱 확보)
+    QVBoxLayout* masterLayout = new QVBoxLayout(this);
+    masterLayout->setContentsMargins(1, 1, 1, 1);
+    masterLayout->addWidget(mainFrame);
+
+    // 프레임 내부 레이아웃
+    QVBoxLayout* frameLayout = new QVBoxLayout(mainFrame);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
+    frameLayout->setSpacing(0);
+
+    m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
+    frameLayout->addWidget(m_titleBar);
+
+    m_contentWidget = new QWidget(mainFrame);
+    m_contentWidget->setObjectName("container");
+    m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
+    frameLayout->addWidget(m_contentWidget);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(m_contentWidget);
     mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
     mainLayout->setSpacing(UiConstants::BTN_LAYOUT_SPACING);
 
-    m_titleLabel = new QLabel(date.toString("yyyy년 MM월 dd일 일정"), this);
+    m_titleLabel = new QLabel(date.toString("yyyy년 MM월 dd일 일정"), m_contentWidget);
     m_titleLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(m_titleLabel);
 
-    QScrollArea *scrollArea = new QScrollArea(this);
+    QScrollArea *scrollArea = new QScrollArea(m_contentWidget);
     scrollArea->setWidgetResizable(true);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setFrameShape(QFrame::NoFrame);
@@ -33,7 +58,7 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     scrollArea->setWidget(scrollContent);
     mainLayout->addWidget(scrollArea);
 
-    QPushButton *addBtn = new QPushButton("+ 새 일정 추가", this);
+    QPushButton *addBtn = new QPushButton("+ 새 일정 추가", m_contentWidget);
     addBtn->setCursor(Qt::PointingHandCursor);
     addBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
     mainLayout->addWidget(addBtn);
@@ -41,6 +66,17 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     connect(addBtn, &QPushButton::clicked, this, &ScheduleManagerWidget::openAddWidget);
 
     refreshList();
+}
+
+void ScheduleManagerWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+}
+
+void ScheduleManagerWidget::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::WindowStateChange) {
+        m_titleBar->updateMaxIcon();
+    }
+    QWidget::changeEvent(event);
 }
 
 void ScheduleManagerWidget::refreshList() {
@@ -53,7 +89,7 @@ void ScheduleManagerWidget::refreshList() {
 
     auto schedules = DatabaseManager::instance().getSchedulesForDay(m_date);
     if (schedules.isEmpty()) {
-        QLabel *emptyLabel = new QLabel("등록된 일정이 없습니다.", this);
+        QLabel *emptyLabel = new QLabel("등록된 일정이 없습니다.", m_contentWidget);
         emptyLabel->setAlignment(Qt::AlignCenter);
         emptyLabel->setStyleSheet(QString("color: %1; font-size: 14px; margin-top: 50px; background: transparent;").arg(UiConstants::COLOR_TEXT_LIGHT));
         m_listLayout->addWidget(emptyLabel);
@@ -61,7 +97,7 @@ void ScheduleManagerWidget::refreshList() {
     }
 
     for (const auto& s : schedules) {
-        QWidget *itemWidget = new QWidget(this);
+        QWidget *itemWidget = new QWidget(m_contentWidget);
         itemWidget->setObjectName("itemWidget");
         itemWidget->setCursor(Qt::PointingHandCursor);
         itemWidget->setAttribute(Qt::WA_Hover);

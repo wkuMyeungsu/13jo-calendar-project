@@ -2,6 +2,7 @@
 #include "UiConstants.h"
 #include <QHBoxLayout>
 #include <QMouseEvent>
+#include "StyleHelper.h"
 
 CustomTitleBar::CustomTitleBar(QWidget* parent)
     : QWidget(parent)
@@ -87,19 +88,15 @@ bool CustomTitleBar::eventFilter(QObject* watched, QEvent* event) {
 }
 
 void CustomTitleBar::applyTheme(const QString& bgColor, const QString& textColor, const QString& borderColor) {
-    setStyleSheet(QString(
-        "#customTitleBar {"
-        "  background-color: %1;"
-        "  border-bottom: 1px solid %2;"
-        "}"
+    setStyleSheet(StyleHelper::getTitleBarStyle(bgColor, borderColor) + QString(
         "#titleLabel {"
-        "  color: %3;"
+        "  color: %1;"
         "  font-size: 11px;"
         "  font-weight: bold;"
         "  background: transparent;"
         "}"
         "#minBtn, #maxBtn {"
-        "  color: %3;"
+        "  color: %1;"
         "  background: transparent;"
         "  border: none;"
         "  font-size: 13px;"
@@ -108,7 +105,7 @@ void CustomTitleBar::applyTheme(const QString& bgColor, const QString& textColor
         "  background-color: rgba(128, 128, 128, 0.18);"
         "}"
         "#closeBtn {"
-        "  color: %3;"
+        "  color: %1;"
         "  background: transparent;"
         "  border: none;"
         "  font-size: 12px;"
@@ -117,7 +114,7 @@ void CustomTitleBar::applyTheme(const QString& bgColor, const QString& textColor
         "  background-color: #E81123;"
         "  color: white;"
         "}"
-    ).arg(bgColor, borderColor, textColor));
+    ).arg(textColor));
 }
 
 void CustomTitleBar::mousePressEvent(QMouseEvent* event) {

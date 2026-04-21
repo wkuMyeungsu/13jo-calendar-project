@@ -11,6 +11,7 @@
 #include <QTextEdit>
 #include <QVariantMap>
 #include <QColorDialog>
+#include "CustomTitleBar.h"
 
 class ScheduleModifyWidget : public QWidget {
     Q_OBJECT
@@ -20,6 +21,10 @@ public:
 signals:
     void scheduleUpdated();
     void scheduleDeleted();
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private slots:
     void handleUpdate();
@@ -39,6 +44,9 @@ private:
     QPushButton *updateBtn;
     QPushButton *deleteBtn;
     QString m_selectedColor;
+
+    CustomTitleBar *m_titleBar;
+    QWidget *m_contentWidget;
 };
 
 #endif // SCHEDULEMODIFYWIDGET_H

@@ -15,15 +15,40 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     m_selectedColor = scheduleData["color"].toString();
     if (m_selectedColor.isEmpty()) m_selectedColor = DEFAULT_COLOR;
 
-    setFixedSize(StyleHelper::WIDGET_WIDTH, StyleHelper::WIDGET_HEIGHT);
+    setWindowFlag(Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setFixedSize(StyleHelper::WIDGET_WIDTH + 2, StyleHelper::WIDGET_HEIGHT + UiConstants::TITLE_BAR_HEIGHT + 2);
     setWindowTitle("일정 수정/삭제");
-    setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    // [New] 마스터 프레임 (모든 것을 감싸고 테두리/곡률 담당)
+    QFrame* mainFrame = new QFrame(this);
+    mainFrame->setObjectName("mainFrame");
+    mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
+
+    // 최상위 레이아웃 (프레임에 1px 여백을 주어 곡률 안티앨리어싱 확보)
+    QVBoxLayout* masterLayout = new QVBoxLayout(this);
+    masterLayout->setContentsMargins(1, 1, 1, 1);
+    masterLayout->addWidget(mainFrame);
+
+    // 프레임 내부 레이아웃
+    QVBoxLayout* frameLayout = new QVBoxLayout(mainFrame);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
+    frameLayout->setSpacing(0);
+
+    m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
+    frameLayout->addWidget(m_titleBar);
+
+    m_contentWidget = new QWidget(mainFrame);
+    m_contentWidget->setObjectName("container");
+    m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
+    frameLayout->addWidget(m_contentWidget);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(m_contentWidget);
     mainLayout->setContentsMargins(StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN, StyleHelper::CONTENT_MARGIN);
     mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
 
-    QLabel *headerLabel = new QLabel("일정 상세 정보", this);
+    QLabel *headerLabel = new QLabel("일정 상세 정보", m_contentWidget);
     headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
@@ -33,11 +58,11 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
 
     QString inputStyle = StyleHelper::getCommonInputStyle() + StyleHelper::getCalendarPopupStyle();
 
-    titleInput = new QLineEdit(this);
+    titleInput = new QLineEdit(m_contentWidget);
     titleInput->setText(scheduleData["title"].toString());
     titleInput->setStyleSheet(inputStyle);
 
-    categoryCombo = new QComboBox(this);
+    categoryCombo = new QComboBox(m_contentWidget);
     categoryCombo->setStyleSheet(inputStyle);
     auto categories = DatabaseManager::instance().getCategories();
     for (const auto& cat : categories) {
@@ -46,36 +71,36 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     int catIdx = categoryCombo->findData(scheduleData["category_id"]);
     if (catIdx != -1) categoryCombo->setCurrentIndex(catIdx);
 
-    colorBtn = new QPushButton("색상 선택", this);
+    colorBtn = new QPushButton("색상 선택", m_contentWidget);
     colorBtn->setCursor(Qt::PointingHandCursor);
     colorBtn->setFixedHeight(INPUT_HEIGHT);
     colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold; border-radius: 6px; border: none;").arg(m_selectedColor));
 
-    allDayCheck = new QCheckBox("하루 종일", this);
+    allDayCheck = new QCheckBox("하루 종일", m_contentWidget);
     allDayCheck->setStyleSheet(StyleHelper::getCheckboxStyle());
     if (scheduleData["all_day"].toInt() == 1) allDayCheck->setChecked(true);
 
     QDateTime start = QDateTime::fromString(scheduleData["start"].toString(), "yyyy-MM-dd HH:mm:ss");
     QDateTime end = QDateTime::fromString(scheduleData["end"].toString(), "yyyy-MM-dd HH:mm:ss");
 
-    startTimeEdit = new QDateTimeEdit(start, this);
+    startTimeEdit = new QDateTimeEdit(start, m_contentWidget);
     startTimeEdit->setCalendarPopup(true);
     startTimeEdit->setStyleSheet(inputStyle);
     
-    endTimeEdit = new QDateTimeEdit(end, this);
+    endTimeEdit = new QDateTimeEdit(end, m_contentWidget);
     endTimeEdit->setCalendarPopup(true);
     endTimeEdit->setStyleSheet(inputStyle);
 
-    contentInput = new QTextEdit(this);
+    contentInput = new QTextEdit(m_contentWidget);
     contentInput->setPlainText(scheduleData["content"].toString());
     contentInput->setMaximumHeight(100);
     contentInput->setStyleSheet(inputStyle + StyleHelper::getScrollbarStyle());
 
-    updateBtn = new QPushButton("수정 내용 저장", this);
+    updateBtn = new QPushButton("수정 내용 저장", m_contentWidget);
     updateBtn->setCursor(Qt::PointingHandCursor);
     updateBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
 
-    deleteBtn = new QPushButton("일정 삭제", this);
+    deleteBtn = new QPushButton("일정 삭제", m_contentWidget);
     deleteBtn->setCursor(Qt::PointingHandCursor);
     deleteBtn->setStyleSheet(StyleHelper::getBtnDeleteStyle());
 
@@ -85,7 +110,7 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     btnLayout->addWidget(deleteBtn, 1);
 
     auto createFormLabel = [&](const QString& text) {
-        QLabel* label = new QLabel(text, this);
+        QLabel* label = new QLabel(text, m_contentWidget);
         label->setStyleSheet(StyleHelper::getFormLabelStyle());
         return label;
     };
@@ -108,6 +133,17 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     connect(deleteBtn, &QPushButton::clicked, this, &ScheduleModifyWidget::handleDelete);
 
     toggleAllDay(allDayCheck->isChecked());
+}
+
+void ScheduleModifyWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+}
+
+void ScheduleModifyWidget::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::WindowStateChange) {
+        m_titleBar->updateMaxIcon();
+    }
+    QWidget::changeEvent(event);
 }
 
 void ScheduleModifyWidget::selectColor() {

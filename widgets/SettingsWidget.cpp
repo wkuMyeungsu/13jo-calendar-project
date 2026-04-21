@@ -2,18 +2,43 @@
 #include "UiCommon.h"
 
 SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
+    setWindowFlag(Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setFixedSize(StyleHelper::WIDGET_WIDTH + 2, 260 + UiConstants::TITLE_BAR_HEIGHT + 2);
     setWindowTitle("설정");
-    setFixedSize(StyleHelper::WIDGET_WIDTH, 260);
-    setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
+
+    // [New] 마스터 프레임 (모든 것을 감싸고 테두리/곡률 담당)
+    QFrame* mainFrame = new QFrame(this);
+    mainFrame->setObjectName("mainFrame");
+    mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
+
+    // 최상위 레이아웃 (프레임에 1px 여백을 주어 곡률 안티앨리어싱 확보)
+    QVBoxLayout* masterLayout = new QVBoxLayout(this);
+    masterLayout->setContentsMargins(1, 1, 1, 1);
+    masterLayout->addWidget(mainFrame);
+
+    // 프레임 내부 레이아웃
+    QVBoxLayout* frameLayout = new QVBoxLayout(mainFrame);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
+    frameLayout->setSpacing(0);
+
+    m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
+    frameLayout->addWidget(m_titleBar);
+
+    m_contentWidget = new QWidget(mainFrame);
+    m_contentWidget->setObjectName("container");
+    m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
+    frameLayout->addWidget(m_contentWidget);
 
     // QSettings 초기화 (조직명, 앱이름을 기반으로 경로 자동 지정)
     QSettings settings("MyCompany", "CalendarProject");
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(m_contentWidget);
     mainLayout->setContentsMargins(UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN, UiConstants::CONTENT_MARGIN);
     mainLayout->setSpacing(UiConstants::LAYOUT_SPACING);
 
-    QLabel *headerLabel = new QLabel("시스템 설정", this);
+    QLabel *headerLabel = new QLabel("시스템 설정", m_contentWidget);
     headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
@@ -22,7 +47,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     formLayout->setLabelAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     // 테마 선택 콤보박스
-    m_themeCombo = new QComboBox(this);
+    m_themeCombo = new QComboBox(m_contentWidget);
     m_themeCombo->addItem("기본 (White & Blue)", static_cast<int>(StyleHelper::Theme::Default));
     m_themeCombo->addItem("소프트 파스텔", static_cast<int>(StyleHelper::Theme::Soft));
     m_themeCombo->addItem("딥 블루", static_cast<int>(StyleHelper::Theme::DeepBlue));
@@ -34,7 +59,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
 
     auto createLabel = [&](const QString& text) {
-        QLabel* label = new QLabel(text, this);
+        QLabel* label = new QLabel(text, m_contentWidget);
         label->setStyleSheet(StyleHelper::getFormLabelStyle());
         return label;
     };
@@ -44,10 +69,10 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     mainLayout->addLayout(formLayout);
     mainLayout->addStretch();
 
-    m_applyBtn = new QPushButton("설정 적용", this);
+    m_applyBtn = new QPushButton("설정 적용", m_contentWidget);
     m_applyBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
 
-    m_resetBtn = new QPushButton("데이터 전체 초기화", this);
+    m_resetBtn = new QPushButton("데이터 전체 초기화", m_contentWidget);
     m_resetBtn->setStyleSheet(StyleHelper::getBtnDeleteStyle());
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
@@ -60,6 +85,17 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     connect(m_applyBtn, &QPushButton::clicked, this, &SettingsWidget::applySettings);
     connect(m_resetBtn, &QPushButton::clicked, this, &SettingsWidget::handleReset);
     connect(m_themeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsWidget::previewTheme);
+}
+
+void SettingsWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+}
+
+void SettingsWidget::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::WindowStateChange) {
+        m_titleBar->updateMaxIcon();
+    }
+    QWidget::changeEvent(event);
 }
 
 void SettingsWidget::applySettings() {
@@ -101,10 +137,11 @@ void SettingsWidget::previewTheme(int index) {
 }
 
 void SettingsWidget::updateFormStyle() {
-    this->setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
+    m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
+    m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     
     // 헤더 및 라벨 스타일 갱신
-    QList<QLabel*> labels = this->findChildren<QLabel*>();
+    QList<QLabel*> labels = m_contentWidget->findChildren<QLabel*>();
     for (QLabel* label : labels) {
         if (label->text() == "시스템 설정") {
             label->setStyleSheet(StyleHelper::getHeaderStyle());
