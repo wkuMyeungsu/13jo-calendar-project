@@ -7,7 +7,6 @@
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
 #include <QVBoxLayout>
-#include <QVariantMap>
 #include <QPushButton>
 #include "UiCommon.h"
 
@@ -16,7 +15,7 @@ class DayCell : public QFrame {
 public:
     explicit DayCell(QWidget* parent = nullptr);
     void setDate(const QDate& date);
-    void setSchedules(const QList<QVariantMap>& schedules);
+    void setSchedules(const QList<ScheduleSlot>& scheduleSlots);
     void setStage(const SafeZoneStage& stage);
     void setSelected(bool select); // 선택 상태 설정
     const QDate& date() const { return m_date; }
@@ -47,7 +46,7 @@ public:
     QVBoxLayout* m_scheduleLayout;
     QGraphicsOpacityEffect* m_hintOpacity;
     QPropertyAnimation* m_hintAnim;
-    QList<QVariantMap> m_currentSchedules; 
+    QList<ScheduleSlot> m_currentSlots;
     
     SafeZoneStage m_stage; 
     };

@@ -70,55 +70,55 @@ bool DatabaseManager::addSchedule(int categoryId, const QString& title, const QS
     return query.exec();
 }
 
-QList<QVariantMap> DatabaseManager::getSchedulesForMonth(int year, int month) {
-    QList<QVariantMap> schedules;
+QList<Schedule> DatabaseManager::getSchedulesForMonth(int year, int month) {
+    QList<Schedule> schedules;
     QSqlQuery query;
     QDate firstDay(year, month, 1);
     QDate lastDay(year, month, firstDay.daysInMonth());
-    
+
     QString startRange = firstDay.toString("yyyy-MM-dd 00:00:00");
-    QString endRange = lastDay.toString("yyyy-MM-dd 23:59:59");
+    QString endRange   = lastDay.toString("yyyy-MM-dd 23:59:59");
 
     query.prepare("SELECT * FROM schedules WHERE start_time <= :endRange AND end_time >= :startRange ORDER BY start_time ASC");
     query.bindValue(":startRange", startRange);
-    query.bindValue(":endRange", endRange);
+    query.bindValue(":endRange",   endRange);
 
     if (query.exec()) {
         while (query.next()) {
-            QVariantMap item;
-            item["id"] = query.value("id");
-            item["category_id"] = query.value("category_id");
-            item["title"] = query.value("title");
-            item["content"] = query.value("content");
-            item["start"] = query.value("start_time");
-            item["end"] = query.value("end_time");
-            item["color"] = query.value("color");
+            Schedule item;
+            item.id         = query.value("id").toInt();
+            item.categoryId = query.value("category_id").toInt();
+            item.title      = query.value("title").toString();
+            item.content    = query.value("content").toString();
+            item.start      = QDateTime::fromString(query.value("start_time").toString(), DATE_FORMAT);
+            item.end        = QDateTime::fromString(query.value("end_time").toString(),   DATE_FORMAT);
+            item.color      = query.value("color").toString();
             schedules.append(item);
         }
     }
     return schedules;
 }
 
-QList<QVariantMap> DatabaseManager::getSchedulesForDay(const QDate& date) {
-    QList<QVariantMap> schedules;
+QList<Schedule> DatabaseManager::getSchedulesForDay(const QDate& date) {
+    QList<Schedule> schedules;
     QSqlQuery query;
     QString dateStart = date.toString("yyyy-MM-dd 00:00:00");
-    QString dateEnd = date.toString("yyyy-MM-dd 23:59:59");
+    QString dateEnd   = date.toString("yyyy-MM-dd 23:59:59");
 
     query.prepare("SELECT * FROM schedules WHERE start_time <= :dateEnd AND end_time >= :dateStart ORDER BY start_time ASC");
     query.bindValue(":dateStart", dateStart);
-    query.bindValue(":dateEnd", dateEnd);
+    query.bindValue(":dateEnd",   dateEnd);
 
     if (query.exec()) {
         while (query.next()) {
-            QVariantMap item;
-            item["id"] = query.value("id");
-            item["category_id"] = query.value("category_id");
-            item["title"] = query.value("title");
-            item["content"] = query.value("content");
-            item["start"] = query.value("start_time");
-            item["end"] = query.value("end_time");
-            item["color"] = query.value("color");
+            Schedule item;
+            item.id         = query.value("id").toInt();
+            item.categoryId = query.value("category_id").toInt();
+            item.title      = query.value("title").toString();
+            item.content    = query.value("content").toString();
+            item.start      = QDateTime::fromString(query.value("start_time").toString(), DATE_FORMAT);
+            item.end        = QDateTime::fromString(query.value("end_time").toString(),   DATE_FORMAT);
+            item.color      = query.value("color").toString();
             schedules.append(item);
         }
     }
@@ -158,14 +158,14 @@ bool DatabaseManager::addCategory(const QString& name, const QString& color) {
     return query.exec();
 }
 
-QList<QVariantMap> DatabaseManager::getCategories() {
-    QList<QVariantMap> categories;
+QList<Category> DatabaseManager::getCategories() {
+    QList<Category> categories;
     QSqlQuery query("SELECT * FROM categories ORDER BY id ASC");
     while (query.next()) {
-        QVariantMap item;
-        item["id"] = query.value("id");
-        item["name"] = query.value("name");
-        item["color"] = query.value("color");
+        Category item;
+        item.id    = query.value("id").toInt();
+        item.name  = query.value("name").toString();
+        item.color = query.value("color").toString();
         categories.append(item);
     }
     return categories;

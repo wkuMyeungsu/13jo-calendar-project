@@ -5,11 +5,11 @@
 #include <QDate>
 #include <QVBoxLayout>
 #include <QList>
-#include <QVariantMap>
 #include <QPushButton>
 #include <QLabel>
 #include <QScrollArea>
 #include "CustomTitleBar.h"
+#include "../models/Schedule.h"
 
 class ScheduleManagerWidget : public QWidget {
     Q_OBJECT
@@ -27,13 +27,13 @@ protected:
 private slots:
     void refreshList();
     void openAddWidget();
-    void openEditWidget(const QVariantMap& data);
+    void openEditWidget(const Schedule& data);
 
 private:
     QDate m_date;
     QVBoxLayout *m_listLayout;
     QLabel *m_titleLabel;
-    QMap<QObject*, QVariantMap> m_itemDataMap; // 위젯과 데이터 매핑용
+    QMap<QObject*, Schedule> m_itemDataMap;
 
     CustomTitleBar *m_titleBar;
     QWidget *m_contentWidget;

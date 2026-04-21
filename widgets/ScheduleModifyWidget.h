@@ -9,14 +9,14 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QTextEdit>
-#include <QVariantMap>
 #include <QColorDialog>
 #include "CustomTitleBar.h"
+#include "../models/Schedule.h"
 
 class ScheduleModifyWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ScheduleModifyWidget(const QVariantMap& scheduleData, QWidget *parent = nullptr);
+    explicit ScheduleModifyWidget(const Schedule& scheduleData, QWidget *parent = nullptr);
 
 signals:
     void scheduleUpdated();

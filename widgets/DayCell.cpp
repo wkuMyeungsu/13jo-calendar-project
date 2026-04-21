@@ -99,7 +99,7 @@ void DayCell::setStage(const SafeZoneStage& stage) {
     m_stage = stage;
     m_moreLabel->setFixedHeight(stage.slotHeight);
     m_moreLabel->setStyleSheet(QString("font-size: %1px; color: %2; font-weight: bold; padding: 0px 5px;").arg(stage.fontSize - 1).arg(UiConstants::COLOR_TEXT_DIM));
-    if (!m_currentSchedules.isEmpty()) setSchedules(m_currentSchedules);
+    if (!m_currentSlots.isEmpty()) setSchedules(m_currentSlots);
 }
 
 void DayCell::setDate(const QDate& date) {
@@ -120,66 +120,73 @@ void DayCell::setDate(const QDate& date) {
     updateStyle();
 }
 
-static QLabel* createScheduleBar(const QVariantMap& data, const QDate& cellDate, const SafeZoneStage& stage, QWidget* parent) {
+static QLabel* createScheduleBar(const Schedule& data, const QDate& cellDate, const SafeZoneStage& stage, QWidget* parent) {
     QLabel* label = new QLabel(parent);
     label->setFixedHeight(stage.slotHeight);
-    QDateTime startDT = QDateTime::fromString(data["start"].toString(), "yyyy-MM-dd HH:mm:ss");
-    QDateTime endDT   = QDateTime::fromString(data["end"].toString(),   "yyyy-MM-dd HH:mm:ss");
-    QDate startD = startDT.date(); QDate endD = endDT.date();
-    bool isStartDay = (startD == cellDate), isEndDay = (endD == cellDate), isMultiDay = (startD != endD);
-    bool isAllDay = (data["all_day"].toInt() == 1);
-    
-    QString title = data["title"].toString();
-    if (isStartDay || cellDate.dayOfWeek() == 7 || cellDate.day() == 1) label->setText(" " + title);
+    QDate startD = data.start.date();
+    QDate endD   = data.end.date();
+    bool isStartDay  = (startD == cellDate);
+    bool isEndDay    = (endD   == cellDate);
+    bool isMultiDay  = (startD != endD);
 
-    QColor baseColor(data["color"].toString());
+    if (isStartDay || cellDate.dayOfWeek() == 7 || cellDate.day() == 1)
+        label->setText(" " + data.title);
+
+    QColor baseColor(data.color);
     if (isMultiDay) {
         QString lr = isStartDay ? "4px" : "0px", rr = isEndDay ? "4px" : "0px";
         QString borderLeft = isStartDay ? QString("3px solid %1").arg(baseColor.name()) : "none";
-        label->setStyleSheet(QString("background-color: rgba(%1, %2, %3, 50); color: #333; border-left: %4; border-top-left-radius: %5; border-bottom-left-radius: %5; border-top-right-radius: %6; border-bottom-right-radius: %6; font-size: %7px; font-weight: bold; margin: 1px 0px;")
-            .arg(baseColor.red()).arg(baseColor.green()).arg(baseColor.blue()).arg(borderLeft).arg(lr).arg(rr).arg(stage.fontSize));
-    } else if (isAllDay) {
-        label->setStyleSheet(StyleHelper::getAllDayBarStyle(baseColor.name()));
+        label->setStyleSheet(QString(
+            "background-color: rgba(%1, %2, %3, 50); color: #333; border-left: %4; "
+            "border-top-left-radius: %5; border-bottom-left-radius: %5; "
+            "border-top-right-radius: %6; border-bottom-right-radius: %6; "
+            "font-size: %7px; font-weight: bold; margin: 1px 0px;")
+            .arg(baseColor.red()).arg(baseColor.green()).arg(baseColor.blue())
+            .arg(borderLeft).arg(lr).arg(rr).arg(stage.fontSize));
     } else {
         label->setText(" •" + label->text());
-        label->setStyleSheet(QString("background-color: transparent; color: %1; font-size: %2px; font-weight: bold; margin: 1px 0px;").arg(baseColor.name()).arg(stage.fontSize));
+        label->setStyleSheet(QString(
+            "background-color: transparent; color: %1; font-size: %2px; font-weight: bold; margin: 1px 0px;")
+            .arg(baseColor.name()).arg(stage.fontSize));
     }
-    label->setToolTip(QString("%1\n%2 ~ %3").arg(title, startDT.toString("MM/dd HH:mm"), endDT.toString("MM/dd HH:mm")));
+    label->setToolTip(QString("%1\n%2 ~ %3")
+        .arg(data.title, data.start.toString("MM/dd HH:mm"), data.end.toString("MM/dd HH:mm")));
     return label;
 }
 
-void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
-    m_currentSchedules = schedules;
+void DayCell::setSchedules(const QList<ScheduleSlot>& scheduleSlots) {
+    m_currentSlots = scheduleSlots;
     QLayoutItem* child;
-    while ((child = m_scheduleLayout->takeAt(0)) != nullptr) { 
-        if (child->widget()) child->widget()->deleteLater(); 
-        delete child; 
+    while ((child = m_scheduleLayout->takeAt(0)) != nullptr) {
+        if (child->widget()) child->widget()->deleteLater();
+        delete child;
     }
 
     int displayLimit = m_stage.maxSlots;
     for (int i = 0; i < displayLimit; ++i) {
-        if (i < schedules.size()) {
-            const QVariantMap& s = schedules[i];
-            if (s.isEmpty() || s.contains("_is_bar_spacer")) {
-                m_scheduleLayout->addSpacing(m_stage.slotHeight);
+        if (i < scheduleSlots.size()) {
+            const ScheduleSlot& item = scheduleSlots[i];
+            if (item.kind == ScheduleSlot::Kind::Schedule) {
+                m_scheduleLayout->addWidget(createScheduleBar(item.data, m_date, m_stage, this));
             } else {
-                m_scheduleLayout->addWidget(createScheduleBar(s, m_date, m_stage, this));
+                m_scheduleLayout->addSpacing(m_stage.slotHeight);
             }
         } else {
             m_scheduleLayout->addSpacing(m_stage.slotHeight);
         }
     }
 
-    int totalRealCount = 0;
-    for (const auto& s : schedules) if (!s.isEmpty() && !s.contains("_is_bar_spacer")) totalRealCount++;
-    int visibleRealInGrid = 0;
-    for (int i = 0; i < displayLimit; ++i) {
-        if (i < schedules.size() && !schedules[i].isEmpty() && !schedules[i].contains("_is_bar_spacer"))
-            visibleRealInGrid++;
-    }
-    int hiddenRealCount = totalRealCount - visibleRealInGrid;
-    if (hiddenRealCount > 0) {
-        m_moreLabel->setText(QString("+ %1 more").arg(hiddenRealCount));
+    int totalReal = 0;
+    for (const auto& item : scheduleSlots)
+        if (item.kind == ScheduleSlot::Kind::Schedule) totalReal++;
+
+    int visibleReal = 0;
+    for (int i = 0; i < displayLimit && i < scheduleSlots.size(); ++i)
+        if (scheduleSlots[i].kind == ScheduleSlot::Kind::Schedule) visibleReal++;
+
+    int hidden = totalReal - visibleReal;
+    if (hidden > 0) {
+        m_moreLabel->setText(QString("+ %1 more").arg(hidden));
         m_moreLabel->show();
     } else {
         m_moreLabel->hide();
@@ -200,10 +207,8 @@ void DayCell::enterEvent(QEnterEvent* e) {
     updateStyle();
 
     bool hasSchedules = false;
-    for (const auto& s : m_currentSchedules) {
-        if (!s.isEmpty() && !s.contains("_is_bar_spacer")) {
-            hasSchedules = true; break;
-        }
+    for (const auto& slot : m_currentSlots) {
+        if (slot.kind == ScheduleSlot::Kind::Schedule) { hasSchedules = true; break; }
     }
 
     if (!hasSchedules) {
@@ -239,12 +244,10 @@ void DayCell::mousePressEvent(QMouseEvent* e) {
 void DayCell::mouseDoubleClickEvent(QMouseEvent* e) {
     if (e->button() == Qt::LeftButton) {
         bool hasSchedules = false;
-        for (const auto& s : m_currentSchedules) {
-            if (!s.isEmpty() && !s.contains("_is_bar_spacer")) {
-                hasSchedules = true; break;
-            }
+        for (const auto& slot : m_currentSlots) {
+            if (slot.kind == ScheduleSlot::Kind::Schedule) { hasSchedules = true; break; }
         }
-        
+
         if (!hasSchedules) {
             emit addRequested(m_date);
         } else {

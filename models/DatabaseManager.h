@@ -8,7 +8,8 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QList>
-#include <QVariantMap>
+#include "Schedule.h"
+#include "Category.h"
 
 class DatabaseManager {
 public:
@@ -23,8 +24,8 @@ public:
                      const QDateTime& start, const QDateTime& end, const QString& color);
 
     // CRUD: Read
-    QList<QVariantMap> getSchedulesForMonth(int year, int month);
-    QList<QVariantMap> getSchedulesForDay(const QDate& date);
+    QList<Schedule>  getSchedulesForMonth(int year, int month);
+    QList<Schedule>  getSchedulesForDay(const QDate& date);
 
     // CRUD: Update
     bool updateSchedule(int id, int categoryId, const QString& title, const QString& content,
@@ -35,16 +36,15 @@ public:
 
     // Categories CRUD
     bool addCategory(const QString& name, const QString& color);
-    QList<QVariantMap> getCategories();
+    QList<Category>  getCategories();
     bool updateCategory(int id, const QString& name, const QString& color);
     bool deleteCategory(int id);
-    bool resetDatabase(); // 모든 일정 및 카테고리 삭제
+    bool resetDatabase();
 
 private:
     DatabaseManager() = default;
     ~DatabaseManager();
     QSqlDatabase m_db;
 };
-
 
 #endif // DATABASEMANAGER_H

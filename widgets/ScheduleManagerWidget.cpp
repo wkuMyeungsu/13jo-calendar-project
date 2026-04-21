@@ -104,18 +104,20 @@ void ScheduleManagerWidget::refreshList() {
         itemWidget->setAttribute(Qt::WA_Hover);
         itemWidget->installEventFilter(this);
         
-        QString colorStr = s["color"].toString();
-        if (colorStr.isEmpty()) colorStr = StyleHelper::getPrimaryColor();
+        QString colorStr = s.color.isEmpty() ? StyleHelper::getPrimaryColor() : s.color;
         itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
 
         QHBoxLayout *itemLayout = new QHBoxLayout(itemWidget);
         itemLayout->setContentsMargins(15, 12, 15, 12);
 
         QVBoxLayout *textLayout = new QVBoxLayout();
-        QLabel *title = new QLabel(s["title"].toString(), itemWidget);
+        QLabel *title = new QLabel(s.title, itemWidget);
         title->setStyleSheet(QString("font-weight: bold; font-size: 14px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
-        
-        QString timeStr = (s["all_day"].toInt() == 1) ? "하루 종일" : QString("%1 ~ %2").arg(s["start"].toString().mid(11, 5)).arg(s["end"].toString().mid(11, 5));
+
+        QString startStr = s.start.toString("HH:mm");
+        QString endStr   = s.end.toString("HH:mm");
+        bool isAllDay    = (startStr == "00:00" && endStr == "00:00");
+        QString timeStr  = isAllDay ? "하루 종일" : QString("%1 ~ %2").arg(startStr, endStr);
         QLabel *time = new QLabel(timeStr, itemWidget);
         time->setStyleSheet(QString("color: %1; font-size: 12px; border: none; background: transparent;").arg(UiConstants::COLOR_TEXT_DIM));
 
@@ -123,7 +125,7 @@ void ScheduleManagerWidget::refreshList() {
         textLayout->addWidget(time);
         itemLayout->addLayout(textLayout, 2);
 
-        QString content = s["content"].toString().simplified();
+        QString content = s.content.simplified();
         if (!content.isEmpty()) {
             if (content.length() > 25) content = content.left(22) + "...";
             QLabel *noteLabel = new QLabel(content, itemWidget);
@@ -143,7 +145,7 @@ bool ScheduleManagerWidget::eventFilter(QObject *obj, QEvent *event) {
     QWidget *widget = qobject_cast<QWidget*>(obj);
     if (!widget || !m_itemDataMap.contains(widget)) return QWidget::eventFilter(obj, event);
 
-    QString colorStr = m_itemDataMap[widget]["color"].toString();
+    QString colorStr = m_itemDataMap[widget].color;
     if (colorStr.isEmpty()) colorStr = StyleHelper::getPrimaryColor();
 
     if (event->type() == QEvent::MouseButtonPress) {
@@ -175,7 +177,7 @@ void ScheduleManagerWidget::openAddWidget() {
     inputWidget->show();
 }
 
-void ScheduleManagerWidget::openEditWidget(const QVariantMap& data) {
+void ScheduleManagerWidget::openEditWidget(const Schedule& data) {
     ScheduleModifyWidget *modifyWidget = new ScheduleModifyWidget(data);
     modifyWidget->setAttribute(Qt::WA_DeleteOnClose);
     modifyWidget->setWindowModality(Qt::ApplicationModal);

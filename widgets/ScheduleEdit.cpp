@@ -57,7 +57,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     categoryCombo = new QComboBox(m_contentWidget);
     auto categories = DatabaseManager::instance().getCategories();
     for (const auto& cat : categories) {
-        categoryCombo->addItem(cat["name"].toString(), cat["id"]);
+        categoryCombo->addItem(cat.name, cat.id);
     }
     categoryCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
 

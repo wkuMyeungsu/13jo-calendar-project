@@ -23,7 +23,6 @@
 #include <QEasingCurve>
 #include <QPoint>
 #include <QDebug>
-#include <QVariantMap>
 #include <QSettings>
 #include <QMessageBox>
 #include <QGraphicsDropShadowEffect>
@@ -35,6 +34,7 @@
 #include "StyleHelper.h"
 #include "UiConstants.h"
 #include "../models/DatabaseManager.h"
+#include "../models/ScheduleSlot.h"
 
 struct SafeZoneStage {
     int maxSlots;

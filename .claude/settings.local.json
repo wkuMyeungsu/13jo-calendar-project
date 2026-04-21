@@ -3,7 +3,8 @@
     "allow": [
       "Bash(cmake --build build)",
       "Bash(/c/Qt/Tools/mingw1310_64/bin/mingw32-make)",
-      "Bash(/c/Qt/Tools/mingw1310_64/bin/mingw32-make -C \"C:/VEDA/qt-workspace/13jo-calendar-project/build/Desktop_Qt_6_11_0_MinGW_64_bit-Debug\")"
+      "Bash(/c/Qt/Tools/mingw1310_64/bin/mingw32-make -C \"C:/VEDA/qt-workspace/13jo-calendar-project/build/Desktop_Qt_6_11_0_MinGW_64_bit-Debug\")",
+      "Bash(cmake --build .)"
     ]
   }
 }

@@ -118,14 +118,13 @@ void CategoryModifyWidget::changeEvent(QEvent *event) {
 
 void CategoryModifyWidget::loadCategories() {
     m_listWidget->clear();
-    QList<QVariantMap> categories = DatabaseManager::instance().getCategories();
+    auto categories = DatabaseManager::instance().getCategories();
     for (const auto& cat : categories) {
-        QListWidgetItem *item = new QListWidgetItem(cat["name"].toString(), m_listWidget);
-        item->setData(Qt::UserRole, cat["id"]);
-        item->setData(Qt::UserRole + 1, cat["color"].toString());
-        
-        // 텍스트 색상 및 폰트 설정
-        item->setForeground(QColor(cat["color"].toString()));
+        QListWidgetItem *item = new QListWidgetItem(cat.name, m_listWidget);
+        item->setData(Qt::UserRole, cat.id);
+        item->setData(Qt::UserRole + 1, cat.color);
+
+        item->setForeground(QColor(cat.color));
         QFont font = item->font();
         font.setBold(true);
         font.setPointSize(10);

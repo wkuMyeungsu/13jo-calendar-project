@@ -10,10 +10,9 @@ namespace {
     const QString DEFAULT_COLOR = "#4A90E2";
 }
 
-ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWidget *parent) : QWidget(parent) {
-    m_scheduleId = scheduleData["id"].toInt();
-    m_selectedColor = scheduleData["color"].toString();
-    if (m_selectedColor.isEmpty()) m_selectedColor = DEFAULT_COLOR;
+ScheduleModifyWidget::ScheduleModifyWidget(const Schedule& scheduleData, QWidget *parent) : QWidget(parent) {
+    m_scheduleId    = scheduleData.id;
+    m_selectedColor = scheduleData.color.isEmpty() ? DEFAULT_COLOR : scheduleData.color;
 
     setWindowFlag(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -60,16 +59,16 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
     QString inputStyle = StyleHelper::getCommonInputStyle() + StyleHelper::getCalendarPopupStyle();
 
     titleInput = new QLineEdit(m_contentWidget);
-    titleInput->setText(scheduleData["title"].toString());
+    titleInput->setText(scheduleData.title);
     titleInput->setStyleSheet(inputStyle);
 
     categoryCombo = new QComboBox(m_contentWidget);
     categoryCombo->setStyleSheet(inputStyle);
     auto categories = DatabaseManager::instance().getCategories();
     for (const auto& cat : categories) {
-        categoryCombo->addItem(cat["name"].toString(), cat["id"]);
+        categoryCombo->addItem(cat.name, cat.id);
     }
-    int catIdx = categoryCombo->findData(scheduleData["category_id"]);
+    int catIdx = categoryCombo->findData(scheduleData.categoryId);
     if (catIdx != -1) categoryCombo->setCurrentIndex(catIdx);
 
     colorBtn = new QPushButton("색상 선택", m_contentWidget);
@@ -79,21 +78,17 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
 
     allDayCheck = new QCheckBox("하루 종일", m_contentWidget);
     allDayCheck->setStyleSheet(StyleHelper::getCheckboxStyle());
-    if (scheduleData["all_day"].toInt() == 1) allDayCheck->setChecked(true);
 
-    QDateTime start = QDateTime::fromString(scheduleData["start"].toString(), "yyyy-MM-dd HH:mm:ss");
-    QDateTime end = QDateTime::fromString(scheduleData["end"].toString(), "yyyy-MM-dd HH:mm:ss");
-
-    startTimeEdit = new QDateTimeEdit(start, m_contentWidget);
+    startTimeEdit = new QDateTimeEdit(scheduleData.start, m_contentWidget);
     startTimeEdit->setCalendarPopup(true);
     startTimeEdit->setStyleSheet(inputStyle);
-    
-    endTimeEdit = new QDateTimeEdit(end, m_contentWidget);
+
+    endTimeEdit = new QDateTimeEdit(scheduleData.end, m_contentWidget);
     endTimeEdit->setCalendarPopup(true);
     endTimeEdit->setStyleSheet(inputStyle);
 
     contentInput = new QTextEdit(m_contentWidget);
-    contentInput->setPlainText(scheduleData["content"].toString());
+    contentInput->setPlainText(scheduleData.content);
     contentInput->setMaximumHeight(100);
     contentInput->setStyleSheet(inputStyle + StyleHelper::getScrollbarStyle());
 

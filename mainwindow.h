@@ -11,6 +11,7 @@
 #include <QMap>
 #include <QSizeGrip>
 #include "CustomTitleBar.h"
+#include "models/Schedule.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -96,6 +97,6 @@ private:
     QPushButton* m_pinBtn;
     QVBoxLayout* m_miniScheduleLayout;
     QTimer*  m_realTimeTimer;
-    QMap<QObject*, QVariantMap> m_miniItemDataMap; // 미니 모드 항목 매핑용
+    QMap<QObject*, Schedule> m_miniItemDataMap;
 };
 #endif // MAINWINDOW_H

@@ -291,20 +291,20 @@ void MainWindow::setMiniMode(bool mini) {
                 itemWidget->setAttribute(Qt::WA_Hover);
                 itemWidget->installEventFilter(this);
 
-                QString colorStr = s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString();
+                QString colorStr = s.color.isEmpty() ? StyleHelper::getPrimaryColor() : s.color;
                 itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
 
                 QHBoxLayout* itemLayout = new QHBoxLayout(itemWidget);
                 itemLayout->setContentsMargins(15, 12, 15, 12);
                 itemLayout->setSpacing(10);
 
-                QLabel* titleLabel = new QLabel(s["title"].toString(), itemWidget);
+                QLabel* titleLabel = new QLabel(s.title, itemWidget);
                 titleLabel->setStyleSheet(QString("font-weight: bold; font-size: 13px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
                 itemLayout->addWidget(titleLabel, 1);
 
-                QString startStr = s["start"].toString().mid(11, 5);
-                QString endStr = s["end"].toString().mid(11, 5);
-                bool isAllDay = (s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00");
+                QString startStr = s.start.toString("HH:mm");
+                QString endStr   = s.end.toString("HH:mm");
+                bool isAllDay    = (startStr == "00:00" && endStr == "00:00");
 
                 if (!isAllDay) {
                     QLabel* timeLabel = new QLabel(QString("%1~%2").arg(startStr, endStr), itemWidget);
@@ -314,7 +314,7 @@ void MainWindow::setMiniMode(bool mini) {
                 } else {
                     itemLayout->addStretch(0);
                 }
-                
+
                 m_miniItemDataMap[itemWidget] = s;
                 m_miniScheduleLayout->addWidget(itemWidget);
             }
@@ -330,7 +330,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
     QWidget *widget = qobject_cast<QWidget*>(obj);
     if (!widget || !m_miniItemDataMap.contains(widget)) return QMainWindow::eventFilter(obj, event);
 
-    QString colorStr = m_miniItemDataMap[widget]["color"].toString();
+    QString colorStr = m_miniItemDataMap[widget].color;
     if (colorStr.isEmpty()) colorStr = StyleHelper::getPrimaryColor();
 
     if (event->type() == QEvent::MouseButtonPress) {
@@ -450,10 +450,10 @@ void MainWindow::updateCalendar() {
     QDate next = current.addMonths(1);
 
     auto getFiltered = [this](int y, int m) {
-        QList<QVariantMap> raw = DatabaseManager::instance().getSchedulesForMonth(y, m);
-        QList<QVariantMap> f;
+        QList<Schedule> raw = DatabaseManager::instance().getSchedulesForMonth(y, m);
+        QList<Schedule> f;
         for (const auto& s : raw)
-            if (m_categoryFilters.value(s["category_id"].toInt(), true)) f.append(s);
+            if (m_categoryFilters.value(s.categoryId, true)) f.append(s);
         return f;
     };
 
@@ -586,22 +586,21 @@ void MainWindow::updateCategoryBar() {
     QString bgColor = StyleHelper::getBgColor();
 
     for (const auto& cat : categories) {
-        int id = cat["id"].toInt();
+        int id = cat.id;
         if (!m_categoryFilters.contains(id)) m_categoryFilters[id] = true;
-        QPushButton* btn = new QPushButton(cat["name"].toString(), this);
+        QPushButton* btn = new QPushButton(cat.name, this);
 
         btn->setCheckable(true);
         btn->setChecked(m_categoryFilters[id]);
         btn->setFixedHeight(24);
-        btn->setStyleSheet(StyleHelper::getCategoryPillStyle(cat["color"].toString(), m_categoryFilters[id]));
+        btn->setStyleSheet(StyleHelper::getCategoryPillStyle(cat.color, m_categoryFilters[id]));
 
-        connect(btn, &QPushButton::toggled, [this, id, cat, btn](bool c) { 
-            m_categoryFilters[id] = c; 
-            // 스타일 즉시 갱신 (반투명 효과 적용) - 캡처된 btn 포인터 직접 사용
+        connect(btn, &QPushButton::toggled, [this, id, cat, btn](bool c) {
+            m_categoryFilters[id] = c;
             if (btn) {
-                btn->setStyleSheet(StyleHelper::getCategoryPillStyle(cat["color"].toString(), c));
+                btn->setStyleSheet(StyleHelper::getCategoryPillStyle(cat.color, c));
             }
-            updateCalendar(); 
+            updateCalendar();
         });
         if (count < 3) m_categoryLayout->addWidget(btn);
         else m_overflowLayout->addWidget(btn, (count - 3) / 5, (count - 3) % 5, Qt::AlignLeft | Qt::AlignTop);
