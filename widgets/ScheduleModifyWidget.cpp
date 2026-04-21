@@ -7,7 +7,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QLabel>
-#include <QColorDialog>
+#include "ColorPickerPopup.h"
 
 // 리팩토링: 상수 정의
 namespace {
@@ -118,11 +118,15 @@ ScheduleModifyWidget::ScheduleModifyWidget(const QVariantMap& scheduleData, QWid
 }
 
 void ScheduleModifyWidget::selectColor() {
-    QColor color = QColorDialog::getColor(QColor(m_selectedColor), this, "일정 색상 선택");
-    if (color.isValid()) {
-        m_selectedColor = color.name();
+    ColorPickerPopup *popup = new ColorPickerPopup(this);
+    popup->move(colorBtn->mapToGlobal(QPoint(0, colorBtn->height())));
+    
+    connect(popup, &ColorPickerPopup::colorSelected, this, [this](const QString& color) {
+        m_selectedColor = color;
         colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold; border-radius: 6px; border: none;").arg(m_selectedColor));
-    }
+    });
+    
+    popup->show();
 }
 
 void ScheduleModifyWidget::toggleAllDay(bool checked) {

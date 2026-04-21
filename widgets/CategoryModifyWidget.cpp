@@ -4,7 +4,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QColorDialog>
+#include "ColorPickerPopup.h"
 #include <QMessageBox>
 #include <QVariantMap>
 
@@ -109,11 +109,15 @@ void CategoryModifyWidget::loadCategories() {
 }
 
 void CategoryModifyWidget::selectColor() {
-    QColor color = QColorDialog::getColor(QColor(m_selectedColor), this, "카테고리 색상 선택");
-    if (color.isValid()) {
-        m_selectedColor = color.name();
+    ColorPickerPopup *popup = new ColorPickerPopup(this);
+    popup->move(m_colorBtn->mapToGlobal(QPoint(0, m_colorBtn->height())));
+
+    connect(popup, &ColorPickerPopup::colorSelected, this, [this](const QString& color) {
+        m_selectedColor = color;
         m_colorBtn->setStyleSheet(QString("background-color: %1; border-radius: 18px; border: 2px solid white; outline: 1px solid #DDD;").arg(m_selectedColor));
-    }
+    });
+
+    popup->show();
 }
 
 void CategoryModifyWidget::onItemSelected(QListWidgetItem *item) {

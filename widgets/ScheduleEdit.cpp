@@ -1,11 +1,11 @@
 #include "ScheduleEdit.h"
 #include "StyleHelper.h"
+#include "ColorPickerPopup.h"
 #include "../models/DatabaseManager.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QMessageBox>
 #include <QDebug>
-#include <QColorDialog>
 
 ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *parent) : QWidget(parent) {
     setFixedSize(StyleHelper::WIDGET_WIDTH, 520);
@@ -17,7 +17,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     mainLayout->setSpacing(StyleHelper::LAYOUT_SPACING);
 
     QLabel *headerLabel = new QLabel("새 일정 등록", this);
-    headerLabel->setStyleSheet(QString("font-size: 18px; font-weight: bold; color: %1; margin-bottom: 5px;").arg(StyleHelper::getTextColor()));
+    headerLabel->setStyleSheet(StyleHelper::getHeaderStyle());
     mainLayout->addWidget(headerLabel);
 
     QFormLayout *formLayout = new QFormLayout();
@@ -44,7 +44,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
     colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold; border-radius: 6px; border: none;").arg(m_selectedColor));
 
     allDayCheck = new QCheckBox("하루 종일", this);
-    allDayCheck->setStyleSheet(QString("QCheckBox { color: %1; font-weight: bold; } QCheckBox::indicator { width: 18px; height: 18px; }").arg(StyleHelper::getTextColor()));
+    allDayCheck->setStyleSheet(StyleHelper::getCheckboxStyle());
 
     QDateTime startDateTime(initialDate, QTime::currentTime());
     startTimeEdit = new QDateTimeEdit(startDateTime, this);
@@ -66,7 +66,7 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
 
     auto createFormLabel = [&](const QString& text) {
         QLabel* label = new QLabel(text, this);
-        label->setStyleSheet(QString("color: %1; font-weight: bold; font-size: 13px;").arg(StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#AAA" : "#666"));
+        label->setStyleSheet(StyleHelper::getFormLabelStyle());
         return label;
     };
 
@@ -88,11 +88,18 @@ ScheduleInputWidget::ScheduleInputWidget(const QDate& initialDate, QWidget *pare
 }
 
 void ScheduleInputWidget::selectColor() {
-    QColor color = QColorDialog::getColor(QColor(m_selectedColor), this, "일정 색상 선택");
-    if (color.isValid()) {
-        m_selectedColor = color.name();
+    ColorPickerPopup *picker = new ColorPickerPopup(this);
+    
+    // 팝업 위치를 버튼 바로 아래에 배치
+    QPoint pos = colorBtn->mapToGlobal(QPoint(0, colorBtn->height()));
+    picker->move(pos);
+
+    connect(picker, &ColorPickerPopup::colorSelected, this, [this](const QString& color) {
+        m_selectedColor = color;
         colorBtn->setStyleSheet(QString("background-color: %1; color: white; font-weight: bold; border-radius: 6px; border: none;").arg(m_selectedColor));
-    }
+    });
+
+    picker->show();
 }
 
 void ScheduleInputWidget::toggleAllDay(bool checked) {
