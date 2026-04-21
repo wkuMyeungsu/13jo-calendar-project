@@ -49,6 +49,13 @@ MonthWidget::MonthWidget(QWidget* parent) : QWidget(parent) {
     }
 }
 
+void MonthWidget::setStage(const SafeZoneStage& stage) {
+    m_stage = stage;
+    for (DayCell* cell : m_cells) {
+        cell->setStage(stage);
+    }
+}
+
 void MonthWidget::updateMonth(int year, int month, const QList<QVariantMap>& schedules) {
     // [개선] 화면 업데이트를 잠시 중단 (플리커 방지 핵심)
     this->setUpdatesEnabled(false);

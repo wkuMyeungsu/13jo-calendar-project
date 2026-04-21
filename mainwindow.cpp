@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(savedTheme);
 
     ui->setupUi(this);
-    setMinimumSize(300, 400);
+    setMinimumSize(400, 500); // 최소 높이 강제 (겹침 방지)
 
     if (!DatabaseManager::instance().initDatabase("calendar_data.db")) {
         qDebug() << "Database initialization failed.";
@@ -321,8 +321,13 @@ void MainWindow::updateLayoutPositions() {
         m_currentHeaderH = kBaseHeaderH + overflowH;
     } else { m_overflowWidget->hide(); m_currentHeaderH = kBaseHeaderH; }
     int h = ui->centralwidget->height() - m_currentHeaderH;
+    SafeZoneStage stage = getStageForHeight(h);
+    
     m_container->resize(w * 3, h);
-    for (int i = 0; i < 3; ++i) m_months[i]->setGeometry(i * w, 0, w, h);
+    for (int i = 0; i < 3; ++i) {
+        m_months[i]->setStage(stage);
+        m_months[i]->setGeometry(i * w, 0, w, h);
+    }
     m_container->move(-w + m_xOffset, m_currentHeaderH);
     m_container->lower();
 }

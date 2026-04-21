@@ -4,269 +4,189 @@
 #include <QResizeEvent>
 #include <QGraphicsOpacityEffect>
 #include <QDateTime>
+#include <QColor>
 
 DayCell::DayCell(QWidget* parent) 
     : QFrame(parent)
-    , m_wasTimeShown(false)
-    , m_lastMaxSchedules(0)
 {
     setFrameStyle(QFrame::NoFrame);
-    setMinimumSize(50, 50);
-    setStyleSheet(
-        "DayCell { border: 0.5px solid #E0E0E0; background-color: white; }"
-        "DayCell:hover { background-color: #F5F8FF; }"
-    );
+    setMinimumSize(40, 40);
+    m_stage = {2, 22, 11}; 
 
+    // 메인 레이아웃
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(2, 2, 2, 2);
-    mainLayout->setSpacing(2);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
 
+    // [1] Date Header 영역 (22px 고정)
     m_dateLabel = new QLabel(this);
-    m_dateLabel->setStyleSheet("font-weight: bold; color: #333; border: none;");
+    m_dateLabel->setFixedHeight(22);
+    m_dateLabel->setStyleSheet("font-weight: bold; border: none;");
     mainLayout->addWidget(m_dateLabel, 0, Qt::AlignTop | Qt::AlignLeft);
 
+    // [2] 상단 완충 여백 (Vertical Centering - 모든 셀에서 동일한 비율 유지)
+    mainLayout->addStretch(1);
+
+    // [3] 정보 블록 컨테이너 (고정 그리드 + 오버플로우 라벨)
+    // 이 영역의 높이는 (maxSlots + 1) * slotHeight로 고정됨
     m_scheduleLayout = new QVBoxLayout();
-    m_scheduleLayout->setSpacing(1);
+    m_scheduleLayout->setSpacing(0);
+    m_scheduleLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->addLayout(m_scheduleLayout);
 
-    mainLayout->addStretch();
+    // [4] 오버플로우 라벨 전용 구역 (공간 고정 핵심)
+    m_moreLabel = new QLabel(this);
+    m_moreLabel->setAlignment(Qt::AlignCenter);
+    // 라벨이 숨겨져도 레이아웃 공간(Size)을 유지하도록 설정하여 수직 정렬 어긋남 방지
+    QSizePolicy sp = m_moreLabel->sizePolicy();
+    sp.setRetainSizeWhenHidden(true); 
+    m_moreLabel->setSizePolicy(sp);
+    m_moreLabel->hide();
+    mainLayout->addWidget(m_moreLabel);
 
+    // [5] 하단 완충 여백 (Vertical Centering)
+    mainLayout->addStretch(1);
+
+    // [6] 플러스 버튼 (Floating)
     m_plusButton = new QPushButton("+", this);
     m_plusButton->setFixedSize(24, 24);
     m_plusButton->setCursor(Qt::PointingHandCursor);
     m_plusButton->setStyleSheet(
-        "QPushButton {"
-        "  border: none;"
-        "  background-color: #4A90E2;"
-        "  color: white;"
-        "  border-radius: 12px;"
-        "  font-size: 16px;"
-        "  font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "  background-color: #357ABD;"
-        "}"
+        "QPushButton { border: none; background-color: #4A90E2; color: white; border-radius: 12px; font-size: 16px; font-weight: bold; }"
+        "QPushButton:hover { background-color: #357ABD; }"
     );
-
+    
     m_plusOpacity = new QGraphicsOpacityEffect(m_plusButton);
     m_plusOpacity->setOpacity(0.0);
     m_plusButton->setGraphicsEffect(m_plusOpacity);
-
     m_plusAnim = new QPropertyAnimation(m_plusOpacity, "opacity", this);
 
-    mainLayout->addWidget(m_plusButton, 0, Qt::AlignBottom | Qt::AlignRight);
+    connect(m_plusButton, &QPushButton::clicked, [this]() { emit addRequested(m_date); });
+    setStyleSheet("DayCell { border: 0.5px solid #E0E0E0; background-color: white; }");
+}
 
-    connect(m_plusButton, &QPushButton::clicked, [this]() {
-        emit addRequested(m_date);
-    });
+void DayCell::setStage(const SafeZoneStage& stage) {
+    m_stage = stage;
+    m_moreLabel->setFixedHeight(stage.slotHeight);
+    m_moreLabel->setStyleSheet(QString("font-size: %1px; color: #777; font-weight: bold; padding: 0px 5px;").arg(stage.fontSize - 1));
+    
+    if (!m_currentSchedules.isEmpty()) {
+        setSchedules(m_currentSchedules);
+    }
 }
 
 void DayCell::setDate(const QDate& date) {
     m_date = date;
     m_dateLabel->setText(QString::number(date.day()));
-
-    // 날짜 라벨 높이를 22px로 고정 → 모든 셀에서 바의 수직 시작 위치 통일
-    m_dateLabel->setMinimumHeight(22);
-    m_dateLabel->setMaximumHeight(22);
-
     if (date == QDate::currentDate()) {
-        m_dateLabel->setFixedWidth(22);
+        m_dateLabel->setFixedWidth(26);
         m_dateLabel->setAlignment(Qt::AlignCenter);
-        m_dateLabel->setStyleSheet(
-            "background-color: #4A90E2; color: white; border-radius: 11px; "
-            "font-weight: bold; border: none;"
-        );
+        m_dateLabel->setStyleSheet("background-color: #4A90E2; color: white; border-radius: 13px; font-weight: bold; border: none; margin-left: 4px;");
     } else {
-        m_dateLabel->setMinimumWidth(0);
-        m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
+        m_dateLabel->setMinimumWidth(0); m_dateLabel->setMaximumWidth(QWIDGETSIZE_MAX);
         m_dateLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        if (date.dayOfWeek() == 6)
-            m_dateLabel->setStyleSheet("font-weight: bold; color: #1565C0; border: none;");
-        else if (date.dayOfWeek() == 7)
-            m_dateLabel->setStyleSheet("font-weight: bold; color: #D32F2F; border: none;");
-        else
-            m_dateLabel->setStyleSheet("font-weight: bold; color: #333; border: none;");
+        QString color = (date.dayOfWeek() == 6) ? "#1565C0" : (date.dayOfWeek() == 7 ? "#D32F2F" : "#333");
+        m_dateLabel->setStyleSheet(QString("font-weight: bold; color: %1; border: none; padding-left: 8px;").arg(color));
     }
 }
 
-// 슬롯 하나를 렌더링. bar=true면 all-day 바 스타일, false면 시간 이벤트 스타일
-static QLabel* makeScheduleLabel(const QVariantMap& schedule, const QDate& cellDate,
-                                 bool showTime, QWidget* parent)
-{
-    QDateTime start = QDateTime::fromString(schedule["start"].toString(), "yyyy-MM-dd HH:mm:ss");
-    QDateTime end   = QDateTime::fromString(schedule["end"].toString(),   "yyyy-MM-dd HH:mm:ss");
-    bool isStartDay = (start.date() == cellDate);
-    bool isEndDay   = (end.date()   == cellDate);
-    bool isAllDay   = (start.time() <= QTime(0, 0, 5) && end.time() >= QTime(23, 59, 0))
-                      || (start.date() != end.date());
-
-    QString displayText;
-    if (isStartDay || cellDate.dayOfWeek() == 7 || cellDate.day() == 1) {
-        displayText = schedule["title"].toString();
-        if (showTime && isStartDay && !isAllDay)
-            displayText = start.toString("HH:mm ") + displayText;
-    }
-
+static QLabel* createScheduleBar(const QVariantMap& data, const QDate& cellDate, const SafeZoneStage& stage, QWidget* parent) {
     QLabel* label = new QLabel(parent);
-    label->setText(displayText);
+    label->setFixedHeight(stage.slotHeight);
+    QDateTime startDT = QDateTime::fromString(data["start"].toString(), "yyyy-MM-dd HH:mm:ss");
+    QDateTime endDT   = QDateTime::fromString(data["end"].toString(),   "yyyy-MM-dd HH:mm:ss");
+    QDate startD = startDT.date(); QDate endD = endDT.date();
+    bool isStartDay = (startD == cellDate), isEndDay = (endD == cellDate), isMultiDay = (startD != endD);
+    
+    QString title = data["title"].toString();
+    if (isStartDay || cellDate.dayOfWeek() == 7 || cellDate.day() == 1) label->setText(" " + title);
 
-    QString color = schedule["color"].toString();
-    QString style;
-    if (isAllDay) {
-        QString lr = isStartDay ? "4px" : "0px";
-        QString rr = isEndDay   ? "4px" : "0px";
-        style = QString("background-color: %1; color: white; border: none; "
-                        "border-top-left-radius: %2; border-bottom-left-radius: %2; "
-                        "border-top-right-radius: %3; border-bottom-right-radius: %3; "
-                        "margin: 0px; padding: 1px; font-size: 10px; font-weight: bold;")
-                .arg(color, lr, rr);
+    QColor baseColor(data["color"].toString());
+    if (isMultiDay) {
+        QString lr = isStartDay ? "4px" : "0px", rr = isEndDay ? "4px" : "0px";
+        QString borderLeft = isStartDay ? QString("3px solid %1").arg(baseColor.name()) : "none";
+        label->setStyleSheet(QString("background-color: rgba(%1, %2, %3, 50); color: #333; border-left: %4; border-top-left-radius: %5; border-bottom-left-radius: %5; border-top-right-radius: %6; border-bottom-right-radius: %6; font-size: %7px; font-weight: bold; margin: 1px 0px;")
+            .arg(baseColor.red()).arg(baseColor.green()).arg(baseColor.blue()).arg(borderLeft).arg(lr).arg(rr).arg(stage.fontSize));
     } else {
-        style = QString("background-color: transparent; color: %1; border: none; "
-                        "font-weight: bold; font-size: 10px; padding: 1px;").arg(color);
-        if (!displayText.isEmpty() && !displayText.startsWith("•"))
-            label->setText("• " + label->text());
+        label->setText(" •" + label->text());
+        label->setStyleSheet(QString("background-color: transparent; color: %1; font-size: %2px; font-weight: bold; margin: 1px 0px;").arg(baseColor.name()).arg(stage.fontSize));
     }
-    label->setStyleSheet(style);
-    label->setToolTip(QString("%1\n%2 ~ %3").arg(schedule["title"].toString(),
-                      start.toString("MM/dd HH:mm"), end.toString("MM/dd HH:mm")));
+    label->setToolTip(QString("%1\n%2 ~ %3").arg(title, startDT.toString("MM/dd HH:mm"), endDT.toString("MM/dd HH:mm")));
     return label;
-}
-
-static QLabel* makeSpacerLabel(QWidget* parent)
-{
-    QLabel* sp = new QLabel(parent);
-    sp->setFixedHeight(16);
-    sp->setStyleSheet("background: transparent; border: none;");
-    return sp;
 }
 
 void DayCell::setSchedules(const QList<QVariantMap>& schedules) {
     m_currentSchedules = schedules;
+    
+    QLayoutItem* child;
+    while ((child = m_scheduleLayout->takeAt(0)) != nullptr) { if (child->widget()) delete child->widget(); delete child; }
 
-    int dateLabelHeight = m_dateLabel->height() > 0 ? m_dateLabel->height() : 22;
-    int availableHeight = this->height() - dateLabelHeight - 15;
-    int maxSchedules    = qMax(0, availableHeight / 18);
-    m_lastMaxSchedules  = maxSchedules;
+    int displayLimit = m_stage.maxSlots;
+    int totalRealCount = 0;
+    for (const auto& s : schedules) if (!s.isEmpty() && !s.contains("_is_bar_spacer")) totalRealCount++;
 
-    bool showTime  = this->width() > 110;
-    m_wasTimeShown = showTime;
-
-    this->setUpdatesEnabled(false);
-    QLayoutItem* item;
-    while ((item = m_scheduleLayout->takeAt(0)) != nullptr) {
-        if (item->widget()) delete item->widget();
-        delete item;
-    }
-
-    if (schedules.isEmpty()) {
-        this->setUpdatesEnabled(true);
-        this->update();
-        return;
-    }
-
-    // ── 슬롯을 bar 그룹 / normal 그룹으로 분리 ──
-    // bar: multi-day 이벤트(isAllDay) 또는 bar_spacer 마커
-    // normal: 단일 날짜 시간 이벤트
-    struct SlotEntry { int idx; bool isBar; bool isSpacer; };
-    QList<SlotEntry> barEntries, normalEntries;
-
-    for (int i = 0; i < schedules.size(); ++i) {
-        const QVariantMap& s = schedules[i];
-        if (s.value("_is_bar_spacer").toBool()) {
-            barEntries.append({i, true, true});
-        } else if (!s.isEmpty()) {
-            QDate sS = QDateTime::fromString(s["start"].toString(), "yyyy-MM-dd HH:mm:ss").date();
-            QDate sE = QDateTime::fromString(s["end"].toString(),   "yyyy-MM-dd HH:mm:ss").date();
-            bool multiDay = (sS != sE);
-            if (multiDay)
-                barEntries.append({i, true, false});
-            else
-                normalEntries.append({i, false, false});
+    // Strict Slotting: 무조건 m_stage.maxSlots 개수만큼 위젯을 채움
+    for (int i = 0; i < displayLimit; ++i) {
+        if (i < schedules.size()) {
+            const QVariantMap& s = schedules[i];
+            if (s.isEmpty() || s.contains("_is_bar_spacer")) {
+                QWidget* sp = new QWidget(this); sp->setFixedHeight(m_stage.slotHeight);
+                m_scheduleLayout->addWidget(sp);
+            } else {
+                m_scheduleLayout->addWidget(createScheduleBar(s, m_date, m_stage, this));
+            }
         } else {
-            // 완전히 빈 슬롯 (normal 자리 공백)
-            normalEntries.append({i, false, true});
+            QWidget* sp = new QWidget(this); sp->setFixedHeight(m_stage.slotHeight);
+            m_scheduleLayout->addWidget(sp);
         }
     }
 
-    // ── 1. 바 그룹: 항상 전부 렌더 (overflow 제외) ──
-    for (const auto& e : barEntries) {
-        if (e.isSpacer)
-            m_scheduleLayout->addWidget(makeSpacerLabel(this));
-        else
-            m_scheduleLayout->addWidget(makeScheduleLabel(schedules[e.idx], m_date, showTime, this));
+    int visibleRealInGrid = 0;
+    for (int i = 0; i < displayLimit; ++i) {
+        if (i < schedules.size() && !schedules[i].isEmpty() && !schedules[i].contains("_is_bar_spacer"))
+            visibleRealInGrid++;
     }
 
-    // ── 2. 일반 그룹: 남은 공간에서 overflow 처리 ──
-    int usedByBars  = barEntries.size();
-    int normalBudget = qMax(0, maxSchedules - usedByBars);
+    int hiddenRealCount = totalRealCount - visibleRealInGrid;
 
-    // 실제 일정(spacer 제외) 중 숨겨질 수
-    int hiddenNormal = 0;
-    for (int i = normalBudget; i < normalEntries.size(); ++i)
-        if (!normalEntries[i].isSpacer) hiddenNormal++;
-
-    bool overflow    = hiddenNormal > 0;
-    int  renderNormal = overflow ? qMax(0, normalBudget - 1) : normalBudget;
-
-    for (int i = 0; i < renderNormal && i < normalEntries.size(); ++i) {
-        const auto& e = normalEntries[i];
-        if (e.isSpacer)
-            m_scheduleLayout->addWidget(makeSpacerLabel(this));
-        else
-            m_scheduleLayout->addWidget(makeScheduleLabel(schedules[e.idx], m_date, showTime, this));
+    // 오버플로우 라벨 업데이트: hide 시에도 공간을 유지하므로 수직 정렬이 깨지지 않음
+    if (hiddenRealCount > 0) {
+        m_moreLabel->setText(QString("+ %1 more").arg(hiddenRealCount));
+        m_moreLabel->show();
+    } else {
+        m_moreLabel->hide();
     }
+}
 
-    if (overflow) {
-        QLabel* more = new QLabel(QString("+ %1 more").arg(hiddenNormal), this);
-        more->setStyleSheet("font-size: 9px; color: gray; border: none;");
-        m_scheduleLayout->addWidget(more);
-    }
-
-    this->setUpdatesEnabled(true);
-    this->update();
+void DayCell::updatePlusButtonPos() {
+    m_plusButton->move(width() - 28, height() - 28);
+    m_plusButton->raise();
 }
 
 void DayCell::resizeEvent(QResizeEvent* e) {
     QFrame::resizeEvent(e);
-    
-    // 가용 개수 다시 계산
-    int dateLabelHeight = m_dateLabel->height() > 0 ? m_dateLabel->height() : 20;
-    int availableHeight = this->height() - dateLabelHeight - 15;
-    int currentMax = qMax(0, availableHeight / 18);
-    
-    bool currentTimeShown = (this->width() > 110);
-    
-    // 높이가 변해 표시 가능한 개수가 바뀌었거나, 너비가 변해 시간 표시 상태가 바뀐 경우에만 리드로우
-    if (currentMax != m_lastMaxSchedules || currentTimeShown != m_wasTimeShown) {
-        if (!m_currentSchedules.isEmpty()) {
-            setSchedules(m_currentSchedules);
-        } else {
-            m_lastMaxSchedules = currentMax;
-            m_wasTimeShown = currentTimeShown;
-        }
-    }
+    updatePlusButtonPos();
 }
 
 void DayCell::enterEvent(QEnterEvent* e) {
+    m_plusButton->raise();
     m_plusAnim->stop();
-    m_plusAnim->setDuration(150);
     m_plusAnim->setStartValue(m_plusOpacity->opacity());
     m_plusAnim->setEndValue(1.0);
+    m_plusAnim->setDuration(150);
     m_plusAnim->start();
     QFrame::enterEvent(e);
 }
 
 void DayCell::leaveEvent(QEvent* e) {
     m_plusAnim->stop();
-    m_plusAnim->setDuration(150);
     m_plusAnim->setStartValue(m_plusOpacity->opacity());
     m_plusAnim->setEndValue(0.0);
+    m_plusAnim->setDuration(150);
     m_plusAnim->start();
     QFrame::leaveEvent(e);
 }
 
 void DayCell::mouseDoubleClickEvent(QMouseEvent* e) {
-    if (e->button() == Qt::LeftButton) {
-        emit dayDoubleClicked(m_date);
-    }
+    if (e->button() == Qt::LeftButton) emit dayDoubleClicked(m_date);
 }

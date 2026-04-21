@@ -7,6 +7,7 @@
 #include <QDate>
 #include <QVariantMap>
 #include <QList>
+#include "UiCommon.h"
 
 class DayCell;
 
@@ -15,6 +16,7 @@ class MonthWidget : public QWidget {
 public:
     explicit MonthWidget(QWidget* parent = nullptr);
     void updateMonth(int year, int month, const QList<QVariantMap>& schedules);
+    void setStage(const SafeZoneStage& stage);
 
 signals:
     void dayDoubleClicked(const QDate& date);
@@ -23,6 +25,7 @@ signals:
 private:
     QGridLayout*   m_gridLayout;
     QList<DayCell*> m_cells;
+    SafeZoneStage  m_stage;
 };
 
 #endif // MONTHWIDGET_H
