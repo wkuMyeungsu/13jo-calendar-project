@@ -245,7 +245,7 @@ void MainWindow::updateMiniModeStyle() {
     m_miniWidget->setStyleSheet(QString("background-color: %1;").arg(bgColor));
     m_miniTimeLabel->setStyleSheet(QString("font-size: 32px; font-weight: bold; color: %1; font-family: 'Consolas', monospace; background: transparent;").arg(textColor));
     m_miniDateLabel->setStyleSheet(QString("font-size: 16px; font-weight: bold; color: %1; background: transparent;").arg(primary));
-    m_pinBtn->setStyleSheet(QString("QPushButton { border: none; font-size: 16px; background: transparent; } QPushButton:checked { background: #E3F2FD; border-radius: 15px; }"));
+    m_pinBtn->setStyleSheet(QString("QPushButton { border: none; font-size: 16px; background: transparent; } QPushButton:checked { background: #E0E0E0; border-radius: 15px; }"));
 
     if (QPushButton* sBtn = m_miniWidget->findChild<QPushButton*>("miniSettingsBtn")) sBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
     if (QPushButton* bBtn = m_miniWidget->findChild<QPushButton*>("miniBackBtn")) bBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
