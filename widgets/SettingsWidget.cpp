@@ -8,7 +8,7 @@
 
 SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     setWindowTitle("설정");
-    setFixedSize(StyleHelper::WIDGET_WIDTH, 300);
+    setFixedSize(StyleHelper::WIDGET_WIDTH, 260); // 높이 조정
     setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -33,14 +33,6 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     m_themeCombo->setCurrentIndex(static_cast<int>(StyleHelper::currentTheme));
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
 
-    // 데드라인 시간 설정
-    m_deadlineSpin = new QSpinBox(this);
-    m_deadlineSpin->setRange(1, 1440); // 1분 ~ 24시간
-    m_deadlineSpin->setSuffix(" 분");
-    m_deadlineSpin->setStyleSheet(StyleHelper::getCommonInputStyle());
-    // 현재는 하드코딩된 값을 가져오지만 나중에 MainWindow에서 가져오도록 수정 가능
-    m_deadlineSpin->setValue(60); 
-
     auto createLabel = [&](const QString& text) {
         QLabel* label = new QLabel(text, this);
         label->setStyleSheet(StyleHelper::getFormLabelStyle());
@@ -48,7 +40,6 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     };
 
     formLayout->addRow(createLabel("테마 선택"), m_themeCombo);
-    formLayout->addRow(createLabel("데드라인 알림"), m_deadlineSpin);
 
     mainLayout->addLayout(formLayout);
     mainLayout->addStretch();
@@ -109,7 +100,6 @@ void SettingsWidget::updateFormStyle() {
     }
 
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
-    m_deadlineSpin->setStyleSheet(StyleHelper::getCommonInputStyle());
     m_applyBtn->setStyleSheet(StyleHelper::getBtnSaveStyle());
     m_resetBtn->setStyleSheet(StyleHelper::getBtnDeleteStyle());
 }

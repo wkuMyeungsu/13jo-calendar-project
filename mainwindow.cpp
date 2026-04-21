@@ -43,7 +43,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ── 일반 모드 UI 구성 ──
     m_headerBar = new QWidget(ui->centralwidget);
-    m_headerBar->setStyleSheet("QWidget { background-color: white; border-bottom: 1px solid #E0E0E0; }");
     QHBoxLayout* headerLayout = new QHBoxLayout(m_headerBar);
     headerLayout->setContentsMargins(15, 0, 15, 0);
 
@@ -56,7 +55,6 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout* centerLayout = new QHBoxLayout(centerGroup);
     m_prevBtn = new QPushButton("◀", centerGroup);
     m_monthLabel = new QLabel(centerGroup);
-    m_monthLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #222; border: none;");
     m_nextBtn = new QPushButton("▶", centerGroup);
     centerLayout->addWidget(m_prevBtn);
     centerLayout->addWidget(m_monthLabel);
@@ -76,7 +74,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_todayBtn, &QPushButton::clicked, this, &MainWindow::goToday);
 
     m_overflowWidget = new QWidget(ui->centralwidget);
-    m_overflowWidget->setStyleSheet("QWidget { background-color: #F9F9F9; border-bottom: 1px solid #E0E0E0; }");
     m_overflowLayout = new QGridLayout(m_overflowWidget);
     m_overflowWidget->hide();
 
@@ -102,76 +99,48 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ── 미니 모드 UI 구성 ──
     m_miniWidget = new QWidget(ui->centralwidget);
-    m_miniWidget->setStyleSheet("background-color: white;");
     QVBoxLayout* miniMainLayout = new QVBoxLayout(m_miniWidget);
     miniMainLayout->setContentsMargins(20, 20, 20, 20);
     miniMainLayout->setSpacing(10);
 
-    // [미니 상단] : 시계 및 핀 버튼 (중앙 정렬 보장)
     QWidget* miniTopContainer = new QWidget(m_miniWidget);
     QHBoxLayout* miniTopLayout = new QHBoxLayout(miniTopContainer);
     miniTopLayout->setContentsMargins(0, 0, 0, 0);
-
-    // 좌측에 빈 공간(Spacer)을 주어 시계가 중앙에 오도록 유도
     miniTopLayout->addStretch(1);
-
     m_miniTimeLabel = new QLabel(m_miniWidget);
-    m_miniTimeLabel->setStyleSheet("font-size: 32px; font-weight: bold; color: #333; font-family: 'Consolas', monospace;");
     m_miniTimeLabel->setAlignment(Qt::AlignCenter);
     miniTopLayout->addWidget(m_miniTimeLabel);
-
-    // 우측 영역: 핀 버튼을 담을 컨테이너 (시계의 중앙 정렬을 방해하지 않음)
     miniTopLayout->addStretch(1);
-    
     m_pinBtn = new QPushButton("📌", m_miniWidget);
     m_pinBtn->setFixedSize(30, 30);
     m_pinBtn->setCheckable(true);
-    m_pinBtn->setCursor(Qt::PointingHandCursor);
-    m_pinBtn->setStyleSheet("QPushButton { border: none; font-size: 16px; background: transparent; } QPushButton:checked { background: #E3F2FD; border-radius: 15px; }");
     connect(m_pinBtn, &QPushButton::clicked, this, &MainWindow::togglePinned);
-    
-    // 실제 핀 버튼은 시계와 겹치지 않게 우측에 수동으로 밀착시키거나 레이아웃 끝에 배치
     miniTopLayout->addWidget(m_pinBtn);
     miniMainLayout->addWidget(miniTopContainer);
 
     m_miniDateLabel = new QLabel(m_miniWidget);
-    m_miniDateLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #4A90E2;");
     m_miniDateLabel->setAlignment(Qt::AlignCenter);
     miniMainLayout->addWidget(m_miniDateLabel);
-
-    QLabel* divider = new QLabel(m_miniWidget);
-    divider->setFixedHeight(1);
-    divider->setStyleSheet("background-color: #EEE;");
-    miniMainLayout->addWidget(divider);
-
-    QLabel* todayTitle = new QLabel("오늘의 일정", m_miniWidget);
-    todayTitle->setStyleSheet("font-size: 14px; color: #777; font-weight: bold;");
-    miniMainLayout->addWidget(todayTitle);
 
     QScrollArea* miniScroll = new QScrollArea(m_miniWidget);
     miniScroll->setWidgetResizable(true);
     miniScroll->setFrameShape(QFrame::NoFrame);
     QWidget* miniScrollContent = new QWidget();
+    miniScrollContent->setObjectName("miniScrollContent");
     m_miniScheduleLayout = new QVBoxLayout(miniScrollContent);
     m_miniScheduleLayout->setAlignment(Qt::AlignTop);
     m_miniScheduleLayout->setSpacing(8);
     miniScroll->setWidget(miniScrollContent);
     miniMainLayout->addWidget(miniScroll);
 
-    // [미니 하단] : 설정 및 복구 버튼
     QHBoxLayout* miniBottomLayout = new QHBoxLayout();
     miniBottomLayout->setSpacing(10);
-
     QPushButton* settingsBtn = new QPushButton("⚙ 설정", m_miniWidget);
-    settingsBtn->setCursor(Qt::PointingHandCursor);
-    settingsBtn->setStyleSheet("QPushButton { background-color: #f5f5f5; border-radius: 6px; padding: 10px; font-weight: bold; color: #555; }");
+    settingsBtn->setObjectName("miniSettingsBtn");
     connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::openSettingsWidget);
-
     QPushButton* backToFull = new QPushButton("캘린더 보기", m_miniWidget);
-    backToFull->setCursor(Qt::PointingHandCursor);
-    backToFull->setStyleSheet("QPushButton { background-color: #4A90E2; border-radius: 6px; padding: 10px; font-weight: bold; color: white; }");
+    backToFull->setObjectName("miniBackBtn");
     connect(backToFull, &QPushButton::clicked, [this](){ resize(800, 600); });
-
     miniBottomLayout->addWidget(settingsBtn, 1);
     miniBottomLayout->addWidget(backToFull, 2);
     miniMainLayout->addLayout(miniBottomLayout);
@@ -184,8 +153,36 @@ MainWindow::MainWindow(QWidget *parent)
     });
     m_realTimeTimer->start(1000);
 
+    updateMiniModeStyle();
     updateCategoryBar();
     updateCalendar();
+}
+
+void MainWindow::updateMiniModeStyle() {
+    QString bgColor = StyleHelper::getBgColor();
+    QString textColor = StyleHelper::getTextColor();
+    QString primary = StyleHelper::getPrimaryColor();
+
+    m_miniWidget->setStyleSheet(QString("background-color: %1;").arg(bgColor));
+    m_miniTimeLabel->setStyleSheet(QString("font-size: 32px; font-weight: bold; color: %1; font-family: 'Consolas', monospace; background: transparent;").arg(textColor));
+    m_miniDateLabel->setStyleSheet(QString("font-size: 16px; font-weight: bold; color: %1; background: transparent;").arg(primary));
+    
+    m_pinBtn->setStyleSheet(QString(
+        "QPushButton { border: none; font-size: 16px; background: transparent; } "
+        "QPushButton:checked { background: %1; border-radius: 15px; }"
+    ).arg(StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#444" : "#E3F2FD"));
+
+    m_miniWidget->findChild<QWidget*>("miniScrollContent")->setStyleSheet("background: transparent;");
+
+    QPushButton* settingsBtn = m_miniWidget->findChild<QPushButton*>("miniSettingsBtn");
+    if (settingsBtn) settingsBtn->setStyleSheet(StyleHelper::getBtnModifyStyle());
+
+    QPushButton* backToFull = m_miniWidget->findChild<QPushButton*>("miniBackBtn");
+    if (backToFull) backToFull->setStyleSheet(StyleHelper::getBtnSaveStyle());
+
+    // 일반 모드 헤더바 등도 같이 업데이트
+    m_headerBar->setStyleSheet(QString("background-color: %1; border-bottom: 1px solid %2;").arg(bgColor, StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#333" : "#E0E0E0"));
+    m_monthLabel->setStyleSheet(QString("font-size: 18px; font-weight: bold; color: %1; border: none; background: transparent;").arg(textColor));
 }
 
 void MainWindow::setMiniMode(bool mini) {
@@ -193,6 +190,7 @@ void MainWindow::setMiniMode(bool mini) {
     m_isMiniMode = mini;
 
     if (m_isMiniMode) {
+        updateMiniModeStyle();
         m_headerBar->hide();
         m_overflowWidget->hide();
         m_container->hide();
@@ -211,20 +209,41 @@ void MainWindow::setMiniMode(bool mini) {
         auto schedules = DatabaseManager::instance().getSchedulesForDay(today);
         if (schedules.isEmpty()) {
             QLabel* empty = new QLabel("오늘 일정이 없습니다.", m_miniWidget);
-            empty->setStyleSheet("color: #999; font-style: italic; padding: 20px;");
+            empty->setStyleSheet(QString("color: #999; font-style: italic; padding: 20px; background: transparent;"));
             empty->setAlignment(Qt::AlignCenter);
             m_miniScheduleLayout->addWidget(empty);
         } else {
             for (const auto& s : schedules) {
-                QString timeInfo = "";
+                QWidget* itemWidget = new QWidget(m_miniWidget);
+                itemWidget->setObjectName("itemWidget");
+                
+                QString colorStr = s["color"].toString().isEmpty() ? StyleHelper::getPrimaryColor() : s["color"].toString();
+                itemWidget->setStyleSheet(StyleHelper::getItemBaseStyle(colorStr));
+
+                QHBoxLayout* itemLayout = new QHBoxLayout(itemWidget);
+                itemLayout->setContentsMargins(15, 12, 15, 12);
+                itemLayout->setSpacing(10);
+
+                // [왼쪽] 제목 라벨
+                QLabel* titleLabel = new QLabel(s["title"].toString(), itemWidget);
+                titleLabel->setStyleSheet(QString("font-weight: bold; font-size: 13px; color: %1; border: none; background: transparent;").arg(StyleHelper::getTextColor()));
+                itemLayout->addWidget(titleLabel, 1); // 제목에 가중치 1 부여
+
+                // [오른쪽] 시간 정보 (있을 경우만)
                 QString startStr = s["start"].toString().mid(11, 5);
                 QString endStr = s["end"].toString().mid(11, 5);
-                if (!((s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00"))) {
-                    timeInfo = QString("[%1~%2] ").arg(startStr).arg(endStr);
+                bool isAllDay = (s["all_day"].toInt() == 1) || (startStr == "00:00" && endStr == "00:00");
+
+                if (!isAllDay) {
+                    QLabel* timeLabel = new QLabel(QString("%1~%2").arg(startStr, endStr), itemWidget);
+                    timeLabel->setStyleSheet(QString("color: %1; font-size: 11px; border: none; background: transparent;").arg(StyleHelper::currentTheme == StyleHelper::Theme::Dark ? "#AAA" : "#888"));
+                    timeLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                    itemLayout->addWidget(timeLabel);
+                } else {
+                    itemLayout->addStretch(0); // 빈 공간 확보
                 }
-                QLabel* sLabel = new QLabel(QString("%1%2").arg(timeInfo, s["title"].toString()), m_miniWidget);
-                sLabel->setStyleSheet(QString("QLabel { background-color: #F8F9FA; border-left: 4px solid %1; border-radius: 4px; padding: 10px; font-size: 13px; color: #333; }").arg(s["color"].toString().isEmpty() ? "#4A90E2" : s["color"].toString()));
-                m_miniScheduleLayout->addWidget(sLabel);
+
+                m_miniScheduleLayout->addWidget(itemWidget);
             }
         }
     } else {
@@ -235,31 +254,35 @@ void MainWindow::setMiniMode(bool mini) {
     }
 }
 
-void MainWindow::togglePinned() {
-    m_isPinned = !m_isPinned;
-    m_pinBtn->setChecked(m_isPinned);
-
-    Qt::WindowFlags flags = this->windowFlags();
-    if (m_isPinned) {
-        flags |= Qt::WindowStaysOnTopHint;
-    } else {
-        flags &= ~Qt::WindowStaysOnTopHint;
-    }
-    
-    // 플래그 변경 후 윈도우를 다시 표시해야 적용됨
-    this->setWindowFlags(flags);
-    this->show();
-}
-
 void MainWindow::openSettingsWidget() {
     SettingsWidget *settings = new SettingsWidget();
     settings->setAttribute(Qt::WA_DeleteOnClose);
     settings->setWindowModality(Qt::ApplicationModal);
     connect(settings, &SettingsWidget::settingsChanged, this, [this]() {
+        updateMiniModeStyle();
         updateCategoryBar();
         updateCalendar();
     });
     settings->show();
+}
+
+void MainWindow::togglePinned() {
+    m_isPinned = !m_isPinned;
+    m_pinBtn->setChecked(m_isPinned);
+
+    // 1. 크기 제어 (플래그 변경 전 수행)
+    if (m_isPinned) {
+        this->setFixedSize(this->size());
+    } else {
+        this->setMinimumSize(300, 400);
+        this->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+    }
+
+    // 2. 상단 고정 플래그만 개별 제어 (setWindowFlags 전체 교체보다 훨씬 부드러움)
+    this->setWindowFlag(Qt::WindowStaysOnTopHint, m_isPinned);
+    
+    // 3. 변경사항 적용을 위해 다시 표시 (이때만 깜빡임 발생 최소화)
+    this->show();
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -279,7 +302,6 @@ void MainWindow::updateLayoutPositions() {
         m_miniWidget->setGeometry(ui->centralwidget->rect());
         return;
     }
-
     int w = ui->centralwidget->width();
     if (w <= 0) return;
 
@@ -308,7 +330,6 @@ void MainWindow::updateLayoutPositions() {
 }
 
 void MainWindow::updateCalendar() {
-    m_monthLabel->setText(QString("%1년 %2월").arg(m_currentYear).arg(m_currentMonth));
     updateLayoutPositions();
     QDate current(m_currentYear, m_currentMonth, 1);
     QDate prev = current.addMonths(-1);

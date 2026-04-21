@@ -22,7 +22,6 @@ private slots:
 private:
     void updateFormStyle(); // 폼 전체 스타일 갱신 헬퍼
     QComboBox *m_themeCombo;
-    QSpinBox  *m_deadlineSpin;
     QPushButton *m_applyBtn;
     QPushButton *m_resetBtn;
 };
