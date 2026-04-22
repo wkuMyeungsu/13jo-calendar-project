@@ -47,7 +47,7 @@ ScheduleManagerWidget::ScheduleManagerWidget(const QDate& date, QWidget *parent)
     scrollArea->setStyleSheet(StyleHelper::getScrollbarStyle());
 
     QWidget *scrollContent = new QWidget();
-    scrollContent->setStyleSheet("background: transparent;");
+    scrollContent->setStyleSheet(QString("background-color: %1;").arg(StyleHelper::getBgColor()));
     m_listLayout = new QVBoxLayout(scrollContent);
     m_listLayout->setContentsMargins(0, 0, 10, 0);
     m_listLayout->setSpacing(UiConstants::BTN_LAYOUT_SPACING);

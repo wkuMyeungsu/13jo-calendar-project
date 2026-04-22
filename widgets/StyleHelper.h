@@ -202,13 +202,14 @@ namespace StyleHelper {
     }
 
     inline QString getItemBaseStyle(const QString& catColor) {
-        QString border = (currentTheme == Theme::DeepBlue ? "#D2E3FC" : "#EEE");
-        return QString("#itemWidget { background-color: white; border-left: 5px solid %1; border-radius: 6px; border-top: 1px solid %2; border-right: 1px solid %2; border-bottom: 1px solid %2; }").arg(catColor, border);
+        QString border = (currentTheme == Theme::DeepBlue ? "#D2E3FC" : (currentTheme == Theme::Soft ? "#E1BEE7" : "#EEE"));
+        return QString("#itemWidget { background-color: white; border-radius: 6px; border: 1px solid %2; border-left: 5px solid %1; }").arg(catColor, border);
     }
 
     inline QString getItemHoverStyle(const QString& catColor) {
-        QString bg = (currentTheme == Theme::DeepBlue ? "#F1F6FF" : "#F5F9FF");
-        return QString("#itemWidget { background-color: %1; border-left: 5px solid %2; border-radius: 6px; border-top: 1px solid %3; border-right: 1px solid %3; border-bottom: 1px solid %3; }").arg(bg, catColor, getPrimaryColor());
+        QString bg = (currentTheme == Theme::DeepBlue ? "#E8F0FE" : (currentTheme == Theme::Soft ? "#F3E5F5" : "#F8F9FA"));
+        QString primary = getPrimaryColor();
+        return QString("#itemWidget { background-color: %1; border-radius: 6px; border: 1px solid %3; border-left: 5px solid %2; }").arg(bg, catColor, primary);
     }
 }
 
