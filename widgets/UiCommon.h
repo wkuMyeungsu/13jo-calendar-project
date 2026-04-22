@@ -24,7 +24,6 @@
 #include <QPoint>
 #include <QDebug>
 #include <QSettings>
-#include <QMessageBox>
 #include <QGraphicsDropShadowEffect>
 #include <QEvent>
 #include <QMouseEvent>

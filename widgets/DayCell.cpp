@@ -80,6 +80,13 @@ void DayCell::updateStyle() {
         "padding-left: 8px; font-size: %2px;")
         .arg(dateColor).arg(m_stage.dateFontSize));
 
+    // 오버플로우 라벨 스타일 및 높이 갱신
+    m_moreLabel->setFixedHeight(m_stage.slotHeight);
+    m_moreLabel->setStyleSheet(QString(
+        "background-color: #F0F0F0; color: #666; font-size: %1px; font-weight: bold; "
+        "border-radius: 4px; margin: 0px 4px;")
+        .arg(m_stage.fontSize - 1));
+
     m_hoverHintLabel->setStyleSheet(
         QString("font-size: 32px; font-weight: bold; color: %1; background: transparent;").arg(primary)
     );
@@ -98,12 +105,6 @@ void DayCell::setStage(const SafeZoneStage& stage) {
     
     m_dateLabel->setFixedHeight(stage.dateHeight);
     updateStyle();
-
-    m_moreLabel->setFixedHeight(stage.slotHeight);
-    m_moreLabel->setStyleSheet(QString(
-        "background-color: #F0F0F0; color: #666; font-size: %1px; font-weight: bold; "
-        "border-radius: 4px; margin: 0px 4px;")
-        .arg(stage.fontSize - 1));
 
     if (!m_currentSlots.isEmpty()) setSchedules(m_currentSlots);
 }

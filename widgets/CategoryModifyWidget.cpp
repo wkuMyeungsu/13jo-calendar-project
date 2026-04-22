@@ -1,6 +1,7 @@
 #include "CategoryModifyWidget.h"
 #include "UiCommon.h"
 #include "ColorPickerPopup.h"
+#include "CustomMessageBox.h"
 
 CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m_currentEditingId(-1) {
     setWindowFlag(Qt::FramelessWindowHint);
@@ -163,7 +164,7 @@ void CategoryModifyWidget::onItemSelected(QListWidgetItem *item) {
 void CategoryModifyWidget::handleAdd() {
     QString name = m_nameInput->text().trimmed();
     if (name.isEmpty()) {
-        QMessageBox::warning(this, "알림", "카테고리 이름을 입력해 주세요.");
+        CustomMessageBox::warning(this, "알림", "카테고리 이름을 입력해 주세요.");
         return;
     }
 
@@ -178,7 +179,7 @@ void CategoryModifyWidget::handleEdit() {
     
     QString name = m_nameInput->text().trimmed();
     if (name.isEmpty()) {
-        QMessageBox::warning(this, "알림", "카테고리 이름을 입력해 주세요.");
+        CustomMessageBox::warning(this, "알림", "카테고리 이름을 입력해 주세요.");
         return;
     }
 
@@ -191,7 +192,7 @@ void CategoryModifyWidget::handleEdit() {
 void CategoryModifyWidget::handleDelete() {
     if (m_currentEditingId == -1) return;
 
-    if (QMessageBox::question(this, "삭제 확인", "이 카테고리를 삭제하시겠습니까?\n(해당 카테고리의 일정은 미지정으로 변경됩니다.)") == QMessageBox::Yes) {
+    if (CustomMessageBox::question(this, "삭제 확인", "이 카테고리를 삭제하시겠습니까?\n(해당 카테고리의 일정은 미지정으로 변경됩니다.)")) {
         if (DatabaseManager::instance().deleteCategory(m_currentEditingId)) {
             loadCategories();
             emit categoriesChanged();

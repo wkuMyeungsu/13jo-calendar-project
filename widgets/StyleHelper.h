@@ -211,6 +211,48 @@ namespace StyleHelper {
         QString primary = getPrimaryColor();
         return QString("#itemWidget { background-color: %1; border-radius: 6px; border: 1px solid %3; border-left: 5px solid %2; }").arg(bg, catColor, primary);
     }
+
+    // ── 카테고리 필터 위젯 전용 스타일 ──
+    inline QString getAddButtonStyle() {
+        QString primary = getPrimaryColor();
+        return QString(
+            "QPushButton { border-radius: 11px; background-color: %1; color: white; font-weight: bold; font-size: 16px; border: none; }"
+            "QPushButton:hover { background-color: %2; }"
+        ).arg(primary, QColor(primary).lighter(110).name());
+    }
+
+    inline QString getMoreButtonStyle() {
+        QString border = (currentTheme == Theme::DeepBlue ? "#ADCCFB" : "#DDD");
+        return QString(
+            "QPushButton { border: 1px solid %1; border-radius: 4px; background-color: #F8F9FA; color: #666; font-weight: bold; font-size: 14px; }"
+            "QPushButton:hover { background-color: #EEE; }"
+            "QPushButton:checked { background-color: #E0E0E0; border: 1px solid #999; }"
+        ).arg(border);
+    }
+
+    inline QString getOverflowPanelStyle() {
+        QString border = (currentTheme == Theme::DeepBlue ? "#ADCCFB" : "#EEE");
+        return QString("QWidget { background-color: #F8F9FA; border-top: 1px solid %1; border-bottom: 1px solid %1; }").arg(border);
+    }
+
+    // ── 미니 모드 전용 스타일 ──
+    inline QString getMiniModeContentStyle() {
+        return QString("QWidget#miniContent { background-color: %1; border-radius: 12px; }").arg(getBgColor());
+    }
+
+    inline QString getMiniTimeStyle() {
+        return QString("font-size: 32px; font-weight: bold; color: %1; background: transparent;").arg(getPrimaryColor());
+    }
+
+    inline QString getMiniDateStyle() {
+        return QString("font-weight: bold; font-size: 15px; color: %1; background: transparent;").arg(getTextColor());
+    }
+
+    inline QString getPinButtonStyle() {
+        return "QPushButton { background: transparent; border: 1px solid #DDD; border-radius: 4px; font-size: 14px; }"
+               "QPushButton:hover { background: #EEE; }"
+               "QPushButton:checked { background: #E3F2FD; border: 1px solid #2196F3; }";
+    }
 }
 
 #endif // STYLEHELPER_H

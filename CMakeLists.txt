@@ -35,6 +35,12 @@ set(PROJECT_SOURCES
         widgets/ColorPickerPopup.h
         widgets/CustomTitleBar.h
         widgets/CustomTitleBar.cpp
+        widgets/CustomMessageBox.h
+        widgets/CustomMessageBox.cpp
+        widgets/CategoryFilterWidget.h
+        widgets/CategoryFilterWidget.cpp
+        widgets/MiniModeWidget.h
+        widgets/MiniModeWidget.cpp
         widgets/UiCommon.h
         widgets/UiConstants.h
         models/DatabaseManager.cpp

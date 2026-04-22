@@ -1,5 +1,6 @@
 #include "SettingsWidget.h"
 #include "UiCommon.h"
+#include "CustomMessageBox.h"
 
 SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     setWindowFlag(Qt::FramelessWindowHint);
@@ -108,22 +109,20 @@ void SettingsWidget::applySettings() {
     settings.setValue("theme", selectedThemeIdx);
     
     emit settingsChanged();
-    QMessageBox::information(this, "알림", "설정이 저장되었습니다.");
+    CustomMessageBox::information(this, "알림", "설정이 저장되었습니다.");
     this->close();
 }
 
 void SettingsWidget::handleReset() {
-    auto reply = QMessageBox::critical(this, "위험: 전체 초기화", 
-        "모든 일정과 카테고리가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?",
-        QMessageBox::Yes | QMessageBox::No);
+    if (CustomMessageBox::question(this, "위험: 전체 초기화", 
+        "모든 일정과 카테고리가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?")) {
 
-    if (reply == QMessageBox::Yes) {
         if (DatabaseManager::instance().resetDatabase()) {
-            QMessageBox::information(this, "완료", "데이터베이스가 초기화되었습니다.");
+            CustomMessageBox::information(this, "완료", "데이터베이스가 초기화되었습니다.");
             emit settingsChanged(); // 메인 화면 갱신 유도
             this->close();
         } else {
-            QMessageBox::warning(this, "오류", "데이터 초기화 중 문제가 발생했습니다.");
+            CustomMessageBox::warning(this, "오류", "데이터 초기화 중 문제가 발생했습니다.");
         }
     }
 }

@@ -1,6 +1,7 @@
 #include "ScheduleEdit.h"
 #include "UiCommon.h"
 #include "ColorPickerPopup.h"
+#include "CustomMessageBox.h"
 
 ScheduleEditDialog::ScheduleEditDialog(const QDate& initialDate, QWidget *parent)
     : QWidget(parent) {
@@ -193,8 +194,11 @@ void ScheduleEditDialog::selectColor() {
 }
 
 void ScheduleEditDialog::handleSave() {
-    QString title = titleInput->text();
-    if (title.isEmpty()) return;
+    QString title = titleInput->text().trimmed();
+    if (title.isEmpty()) {
+        CustomMessageBox::warning(this, "알림", "일정 제목을 입력해 주세요.");
+        return;
+    }
 
     bool success = false;
     bool isAllDay = allDayCheck->isChecked();
@@ -216,7 +220,7 @@ void ScheduleEditDialog::handleSave() {
 }
 
 void ScheduleEditDialog::handleDelete() {
-    if (QMessageBox::question(this, "삭제 확인", "정말 이 일정을 삭제하시겠습니까?") == QMessageBox::Yes) {
+    if (CustomMessageBox::question(this, "삭제 확인", "정말 이 일정을 삭제하시겠습니까?")) {
         if (DatabaseManager::instance().deleteSchedule(m_scheduleId)) {
             emit scheduleDeleted();
             this->close();
