@@ -2,30 +2,25 @@
 #include "UiCommon.h"
 
 ColorPickerPopup::ColorPickerPopup(QWidget *parent) : QWidget(parent) {
-    setWindowFlags(Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+    setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
 
     setupUI();
-
-    // 부드러운 그림자 효과 추가
-    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setBlurRadius(15);
-    shadow->setXOffset(0);
-    shadow->setYOffset(4);
-    shadow->setColor(QColor(0, 0, 0, 60));
-    setGraphicsEffect(shadow);
 }
 
 void ColorPickerPopup::setupUI() {
-    // 내부 컨테이너 위젯 (여기에 실제 배경과 테두리를 입힘)
+    // 내부 컨테이너 위젯 (실제 배경과 테두리)
     QWidget *container = new QWidget(this);
     container->setObjectName("container");
-    container->setStyleSheet(StyleHelper::getDialogStyle());
+    container->setStyleSheet(StyleHelper::getPopupStyle());
 
+    // 최상위 레이아웃: 여백을 0으로 설정하여 투명한 부분이 남지 않도록 함
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setContentsMargins(0, 0, 0, 0); 
+    mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     mainLayout->addWidget(container);
 
+    // 실제 버튼들이 들어갈 그리드 레이아웃
     QGridLayout *gridLayout = new QGridLayout(container);
     gridLayout->setContentsMargins(UiConstants::LAYOUT_SPACING, UiConstants::LAYOUT_SPACING, UiConstants::LAYOUT_SPACING, UiConstants::LAYOUT_SPACING);
     gridLayout->setSpacing(UiConstants::BTN_LAYOUT_SPACING);
@@ -36,7 +31,7 @@ void ColorPickerPopup::setupUI() {
         QPushButton *btn = new QPushButton(container);
         btn->setFixedSize(28, 28);
         btn->setCursor(Qt::PointingHandCursor);
-        btn->setProperty("colorValue", color); // 클릭 시 어떤 색상인지 식별용
+        btn->setProperty("colorValue", color);
         
         btn->setStyleSheet(StyleHelper::getCircleButtonStyle(color, 28));
 

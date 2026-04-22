@@ -172,6 +172,13 @@ namespace StyleHelper {
         return "QWidget#container { background-color: transparent; border: none; }";
     }
 
+    // ── 팝업 스타일 (ColorPicker 등) ──
+    inline QString getPopupStyle() {
+        QString bg = getBgColor();
+        QString border = (currentTheme == Theme::DeepBlue ? "#ADCCFB" : "#DDD");
+        return QString("QWidget#container { background-color: %1; border: 1px solid %2; border-radius: 8px; }").arg(bg, border);
+    }
+
     // ── 커스텀 타이틀바 전용 스타일 (상단 곡률만 유지, 테두리 제거) ──
     inline QString getTitleBarStyle(const QString& bgColor, const QString& borderColor) {
         return QString(

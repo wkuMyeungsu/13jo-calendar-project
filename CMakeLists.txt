@@ -35,6 +35,8 @@ set(PROJECT_SOURCES
         widgets/ColorPickerPopup.h
         widgets/CustomTitleBar.h
         widgets/CustomTitleBar.cpp
+        widgets/UiCommon.h
+        widgets/UiConstants.h
         models/DatabaseManager.cpp
         models/DatabaseManager.h
         models/CalendarEngine.cpp
