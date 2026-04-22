@@ -8,28 +8,28 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     setWindowTitle("설정");
 
     // [New] 마스터 프레임 (모든 것을 감싸고 테두리/곡률 담당)
-    QFrame* mainFrame = new QFrame(this);
-    mainFrame->setObjectName("mainFrame");
-    mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
+    m_mainFrame = new QFrame(this);
+    m_mainFrame->setObjectName("mainFrame");
+    m_mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
 
     // 최상위 레이아웃 (프레임에 1px 여백을 주어 곡률 안티앨리어싱 확보)
     QVBoxLayout* masterLayout = new QVBoxLayout(this);
     masterLayout->setContentsMargins(1, 1, 1, 1);
-    masterLayout->addWidget(mainFrame);
+    masterLayout->addWidget(m_mainFrame);
 
     // 프레임 내부 레이아웃
-    QVBoxLayout* frameLayout = new QVBoxLayout(mainFrame);
+    QVBoxLayout* frameLayout = new QVBoxLayout(m_mainFrame);
     frameLayout->setContentsMargins(0, 0, 0, 0);
     frameLayout->setSpacing(0);
 
-    m_titleBar = new CustomTitleBar(mainFrame);
+    m_titleBar = new CustomTitleBar(m_mainFrame);
     m_titleBar->setResizable(false);
     m_titleBar->showMinMaxButtons(false); // 최소화/최대화 숨김
     m_titleBar->setTitle(UiConstants::TITLE_SETTINGS);
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     frameLayout->addWidget(m_titleBar);
 
-    m_contentWidget = new QWidget(mainFrame);
+    m_contentWidget = new QWidget(m_mainFrame);
     m_contentWidget->setObjectName("container");
     m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
     frameLayout->addWidget(m_contentWidget);
@@ -137,6 +137,7 @@ void SettingsWidget::previewTheme(int index) {
 }
 
 void SettingsWidget::updateFormStyle() {
+    m_mainFrame->setStyleSheet(StyleHelper::getDialogFrameStyle());
     m_contentWidget->setStyleSheet(StyleHelper::getDialogStyle());
     m_titleBar->applyTheme(StyleHelper::getBgColor(), StyleHelper::getTextColor(), "#DDD");
     

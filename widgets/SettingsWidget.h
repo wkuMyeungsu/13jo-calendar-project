@@ -31,6 +31,7 @@ private:
     QPushButton *m_resetBtn;
 
     CustomTitleBar *m_titleBar;
+    QFrame *m_mainFrame;
     QWidget *m_contentWidget;
 };
 
