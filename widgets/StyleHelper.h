@@ -139,19 +139,23 @@ namespace StyleHelper {
         return QString(
             "QPushButton { background-color: %1; color: white; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: none; }"
             "QPushButton:hover { background-color: %2; }"
+            "QPushButton:disabled { background-color: #E0E0E0; color: #9E9E9E; }"
         ).arg(color, hover);
     }
 
     inline QString getBtnModifyStyle() {
+        QString primary = getPrimaryColor();
         return QString(
             "QPushButton { background-color: %1; color: white; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: none; }"
             "QPushButton:hover { opacity: 0.8; }"
-        ).arg(getPrimaryColor());
+            "QPushButton:disabled { background-color: #F5F5F5; color: #BDBDBD; border: 1px solid #E0E0E0; }"
+        ).arg(primary);
     }
 
     inline QString getBtnDeleteStyle() {
         return "QPushButton { background-color: #F8D7DA; color: #721C24; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; border: 1px solid #F5C6CB; }"
-               "QPushButton:hover { background-color: #E24A4A; color: white; border-color: #E24A4A; }";
+               "QPushButton:hover { background-color: #E24A4A; color: white; border-color: #E24A4A; }"
+               "QPushButton:disabled { background-color: #FAFAFA; color: #EF9A9A; border: 1px solid #F5F5F5; }";
     }
 
     // ── 원형 색상 선택 버튼 스타일 ──
@@ -159,6 +163,7 @@ namespace StyleHelper {
         return QString(
             "QPushButton { background-color: %1; border-radius: %2px; border: 2px solid white; outline: 1px solid #DDD; }"
             "QPushButton:hover { border: 2px solid #999; }"
+            "QPushButton:disabled { background-color: #EEE; outline: 1px solid #EEE; border: 2px solid #F5F5F5; }"
         ).arg(color).arg(size / 2);
     }
 

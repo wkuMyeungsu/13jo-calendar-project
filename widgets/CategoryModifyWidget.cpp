@@ -66,6 +66,7 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
     m_colorBtn->setCursor(Qt::PointingHandCursor);
     m_colorBtn->setFixedSize(UiConstants::COLOR_BTN_SIZE, UiConstants::COLOR_BTN_SIZE);
     m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
+    m_colorBtn->setEnabled(true); // 초기 활성화 (새 카테고리용 색상 선택 가능)
 
     editLayout->addWidget(m_nameInput, 1);
     editLayout->addWidget(m_colorBtn);
@@ -96,12 +97,35 @@ CategoryModifyWidget::CategoryModifyWidget(QWidget *parent) : QWidget(parent), m
 
     // 시그널 연결
     connect(m_listWidget, &QListWidget::itemClicked, this, &CategoryModifyWidget::onItemSelected);
+    connect(m_listWidget, &QListWidget::itemSelectionChanged, this, [this]() {
+        if (m_listWidget->selectedItems().isEmpty()) loadCategories();
+    });
+    connect(m_nameInput, &QLineEdit::textChanged, this, &CategoryModifyWidget::validateButtons);
     connect(m_colorBtn, &QPushButton::clicked, this, &CategoryModifyWidget::selectColor);
     connect(m_addBtn, &QPushButton::clicked, this, &CategoryModifyWidget::handleAdd);
     connect(m_editBtn, &QPushButton::clicked, this, &CategoryModifyWidget::handleEdit);
     connect(m_deleteBtn, &QPushButton::clicked, this, &CategoryModifyWidget::handleDelete);
 
     loadCategories();
+}
+
+void CategoryModifyWidget::validateButtons() {
+    QString currentName = m_nameInput->text().trimmed();
+    bool isNameEmpty = currentName.isEmpty();
+    
+    if (m_currentEditingId != -1) {
+        // [수정 모드]
+        // 1. 변경사항이 있어야 함 (이름 또는 색상)
+        // 2. 이름이 비어있지 않아야 함
+        bool isChanged = (currentName != m_originalName) || (m_selectedColor != m_originalColor);
+        m_editBtn->setEnabled(isChanged && !isNameEmpty);
+        m_addBtn->setEnabled(false); 
+    } else {
+        // [추가 모드]
+        // 이름이 비어있지 않을 때만 활성화
+        m_addBtn->setEnabled(!isNameEmpty);
+        m_editBtn->setEnabled(false);
+    }
 }
 
 void CategoryModifyWidget::resizeEvent(QResizeEvent *event) {
@@ -116,6 +140,10 @@ void CategoryModifyWidget::changeEvent(QEvent *event) {
 }
 
 void CategoryModifyWidget::loadCategories() {
+    m_listWidget->blockSignals(true);
+    m_listWidget->clearSelection();
+    m_listWidget->blockSignals(false);
+
     m_listWidget->clear();
     auto categories = DatabaseManager::instance().getCategories();
     for (const auto& cat : categories) {
@@ -132,7 +160,14 @@ void CategoryModifyWidget::loadCategories() {
     
     // 상태 초기화
     m_currentEditingId = -1;
+    m_originalName.clear();
+    m_originalColor.clear();
     m_nameInput->clear();
+    m_selectedColor = "#4A90E2";
+    m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
+    
+    m_colorBtn->setEnabled(true);  // [변경] 초기 상태에서도 색상 선택 가능
+    m_addBtn->setEnabled(false);   // 이름 입력 전까지 비활성화
     m_editBtn->setEnabled(false);
     m_deleteBtn->setEnabled(false);
 }
@@ -144,6 +179,7 @@ void CategoryModifyWidget::selectColor() {
     connect(popup, &ColorPickerPopup::colorSelected, this, [this](const QString& color) {
         m_selectedColor = color;
         m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
+        validateButtons();
     });
 
     popup->show();
@@ -153,11 +189,16 @@ void CategoryModifyWidget::onItemSelected(QListWidgetItem *item) {
     if (!item) return;
     
     m_currentEditingId = item->data(Qt::UserRole).toInt();
-    m_nameInput->setText(item->text());
-    m_selectedColor = item->data(Qt::UserRole + 1).toString();
+    m_originalName = item->text();
+    m_originalColor = item->data(Qt::UserRole + 1).toString();
+    
+    m_nameInput->setText(m_originalName);
+    m_selectedColor = m_originalColor;
     m_colorBtn->setStyleSheet(StyleHelper::getCircleButtonStyle(m_selectedColor, UiConstants::COLOR_BTN_SIZE));
     
-    m_editBtn->setEnabled(true);
+    m_colorBtn->setEnabled(true); // 아이템 선택 시 활성화
+    m_addBtn->setEnabled(false);  // 수정 모드이므로 비활성화
+    m_editBtn->setEnabled(false); // 아직 변경 전이므로 비활성화
     m_deleteBtn->setEnabled(true);
 }
 
@@ -166,6 +207,15 @@ void CategoryModifyWidget::handleAdd() {
     if (name.isEmpty()) {
         CustomMessageBox::warning(this, "알림", "카테고리 이름을 입력해 주세요.");
         return;
+    }
+
+    // 중복 체크
+    auto categories = DatabaseManager::instance().getCategories();
+    for (const auto& cat : categories) {
+        if (cat.name == name) {
+            CustomMessageBox::warning(this, "중복 오류", "이미 존재하는 카테고리 이름입니다.");
+            return;
+        }
     }
 
     if (DatabaseManager::instance().addCategory(name, m_selectedColor)) {
@@ -181,6 +231,15 @@ void CategoryModifyWidget::handleEdit() {
     if (name.isEmpty()) {
         CustomMessageBox::warning(this, "알림", "카테고리 이름을 입력해 주세요.");
         return;
+    }
+
+    // 중복 체크 (자신 제외)
+    auto categories = DatabaseManager::instance().getCategories();
+    for (const auto& cat : categories) {
+        if (cat.id != m_currentEditingId && cat.name == name) {
+            CustomMessageBox::warning(this, "중복 오류", "이미 존재하는 카테고리 이름입니다.");
+            return;
+        }
     }
 
     if (DatabaseManager::instance().updateCategory(m_currentEditingId, name, m_selectedColor)) {

@@ -27,6 +27,7 @@ private slots:
     void handleDelete();
     void selectColor();
     void onItemSelected(QListWidgetItem *item);
+    void validateButtons(); // 버튼 활성화 상태 업데이트 헬퍼
 
 private:
     QListWidget *m_listWidget;
@@ -37,6 +38,8 @@ private:
     QPushButton *m_deleteBtn;
     
     QString m_selectedColor;
+    QString m_originalName;  // 수정 시 원래 이름 백업
+    QString m_originalColor; // 수정 시 원래 색상 백업
     int m_currentEditingId; // -1이면 추가 모드, 아니면 수정 모드
 
     CustomTitleBar *m_titleBar;

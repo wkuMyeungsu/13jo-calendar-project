@@ -18,11 +18,13 @@ signals:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void changeEvent(QEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void applySettings();
     void previewTheme(int index); // 테마 미리보기 슬롯
     void handleReset();           // 데이터 초기화 슬롯
+    void handleCloseRequested();   // X 버튼 클릭 시 호출
 
 private:
     void updateFormStyle(); // 폼 전체 스타일 갱신 헬퍼
@@ -33,6 +35,9 @@ private:
     CustomTitleBar *m_titleBar;
     QFrame *m_mainFrame;
     QWidget *m_contentWidget;
+
+    int m_initialTheme; // 처음 열렸을 때의 테마 저장
+    bool m_isApplied = false; // 적용 버튼을 눌렀는지 여부
 };
 
 #endif // SETTINGSWIDGET_H

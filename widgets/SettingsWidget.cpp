@@ -55,6 +55,8 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent) {
     
     // 저장된 테마 불러오기 (기본값 Default)
     int savedTheme = settings.value("theme", static_cast<int>(StyleHelper::Theme::Default)).toInt();
+    m_initialTheme = savedTheme; // 초기 상태 백업
+    m_isApplied = false;
     StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(savedTheme);
     m_themeCombo->setCurrentIndex(m_themeCombo->findData(savedTheme));
     m_themeCombo->setStyleSheet(StyleHelper::getCommonInputStyle());
@@ -99,7 +101,30 @@ void SettingsWidget::changeEvent(QEvent *event) {
     QWidget::changeEvent(event);
 }
 
+void SettingsWidget::closeEvent(QCloseEvent *event) {
+    int currentThemeIdx = m_themeCombo->currentData().toInt();
+    
+    if (!m_isApplied && currentThemeIdx != m_initialTheme) {
+        if (CustomMessageBox::question(this, "설정 취소", "변경한 설정이 적용되지 않았습니다.\n그대로 나가시겠습니까?")) {
+            // 원복 후 종료
+            StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(m_initialTheme);
+            emit settingsChanged();
+            event->accept();
+        } else {
+            event->ignore();
+        }
+    } else {
+        event->accept();
+    }
+}
+
+void SettingsWidget::handleCloseRequested() {
+    this->close(); // closeEvent가 가로챔
+}
+
 void SettingsWidget::applySettings() {
+    m_isApplied = true;
+    
     // 1. 전역 변수 업데이트
     int selectedThemeIdx = m_themeCombo->currentData().toInt();
     StyleHelper::currentTheme = static_cast<StyleHelper::Theme>(selectedThemeIdx);
@@ -133,6 +158,9 @@ void SettingsWidget::previewTheme(int index) {
     
     // 2. 현재 창 스타일 즉시 갱신
     updateFormStyle();
+    
+    // 3. 메인 화면 실시간 반영
+    emit settingsChanged();
 }
 
 void SettingsWidget::updateFormStyle() {
